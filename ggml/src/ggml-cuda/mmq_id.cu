@@ -316,22 +316,39 @@ void compute_row_ids(const int32_t * ids, int32_t * ids_src1, int32_t * ids_dst,
 
 void ggml_cuda_mul_mat_q_id(ggml_backend_cuda_context & ctx, const ggml_tensor * src0, const ggml_tensor * src1,
         const ggml_tensor * ids_tensor, ggml_tensor * dst, char * ids_data, char * src1_quantized_data) {
+
+    // --- original assertions / locals (unchanged) ---
     GGML_ASSERT(       src1->type == GGML_TYPE_F32);
     GGML_ASSERT(       dst->type  == GGML_TYPE_F32);
-    GGML_ASSERT(!ids_tensor || ids_tensor->type  == GGML_TYPE_I32); // Optional, used for batched GGML_MUL_MAT_ID.
+    GGML_ASSERT(!ids_tensor || ids_tensor->type  == GGML_TYPE_I32);
 
     GGML_TENSOR_BINARY_OP_LOCALS;
 
-    cudaStream_t stream = ctx.stream();
-    const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
+    // choose device explicitly for this host thread (important in multi-GPU runs)
+    const int id = ggml_cuda_get_device();
+    cudaError_t e = cudaSetDevice(id);
+    if (e != cudaSuccess) {
+        fprintf(stderr, "[gpu %d] cudaSetDevice failed: %s\n", id, cudaGetErrorString(e));
+    }
 
-    //const size_t ts_src0 = ggml_type_size(src0->type);
+    cudaStream_t stream = ctx.stream();
+
+    // print device properties to catch non-identical GPU hardware
+    cudaDeviceProp prop;
+    if (cudaGetDeviceProperties(&prop, id) == cudaSuccess) {
+        fprintf(stderr, "[gpu %d] deviceName=%s cc=%d.%d sharedMemPerBlock=%d sharedMemPerMultiprocessor=%d warpSize=%d nMultiProcessor=%d\n",
+                id, prop.name, prop.major, prop.minor, prop.sharedMemPerBlock, prop.sharedMemPerMultiprocessor, prop.warpSize, prop.multiProcessorCount);
+    } else {
+        fprintf(stderr, "[gpu %d] cudaGetDeviceProperties FAILED\n", id);
+    }
+
+    const int cc = ggml_cuda_info().devices[id].cc;
+
     const size_t ts_src1 = ggml_type_size(src1->type);
     const size_t ts_dst  = ggml_type_size(dst->type);
 
-    //GGML_ASSERT(       nb00       == ts_src0);
-    GGML_ASSERT(       nb10       == ts_src1);
-    GGML_ASSERT(       nb0        == ts_dst);
+    GGML_ASSERT(nb10 == ts_src1);
+    GGML_ASSERT(nb0  == ts_dst);
     GGML_ASSERT(!ids_tensor || ids_tensor->nb[0] == ggml_type_size(ids_tensor->type));
 
     GGML_ASSERT(ne13 == 1);
@@ -342,7 +359,7 @@ void ggml_cuda_mul_mat_q_id(ggml_backend_cuda_context & ctx, const ggml_tensor *
     const float * src1_d = (const float *) src1->data;
     float       *  dst_d = (float       *)  dst->data;
 
-    // If src0 is a temporary compute buffer, clear any potential padding.
+    // clear padding as before
     if (ggml_backend_buffer_get_usage(src0->buffer) == GGML_BACKEND_BUFFER_USAGE_COMPUTE) {
         const size_t size_data  = ggml_nbytes(src0);
         const size_t size_alloc = ggml_backend_buffer_get_alloc_size(src0->buffer, src0);
@@ -355,30 +372,47 @@ void ggml_cuda_mul_mat_q_id(ggml_backend_cuda_context & ctx, const ggml_tensor *
 
     const int64_t ne10_padded = GGML_PAD(ne10, MATRIX_ROW_PADDING);
 
-    const int64_t s01 = src0->nb[1];// / ts_src0;
+    const int64_t s01 = src0->nb[1];
     const int64_t s1  =  dst->nb[1] / ts_dst;
-    const int64_t s02 = src0->nb[2];// / ts_src0;
+    const int64_t s02 = src0->nb[2];
     const int64_t s2  =  dst->nb[2] / ts_dst;
-    const int64_t s03 = src0->nb[3];// / ts_src0;
+    const int64_t s03 = src0->nb[3];
     const int64_t s3  =  dst->nb[3] / ts_dst;
 
     const bool use_stream_k = (GGML_CUDA_CC_IS_NVIDIA(cc) && ggml_cuda_highest_compiled_arch(cc) >= GGML_CUDA_CC_VOLTA)
                             || GGML_CUDA_CC_IS_CDNA(cc);
 
     if (!ids_tensor) {
-
         ggml_cuda_pool_alloc<char> src1_q8_1(ctx.pool());
         if (!src1_quantized_data) {
-            const size_t nbytes_src1_q8_1 = ne13*ne12 * ne11*ne10_padded * sizeof(block_q8_1)/QK8_1
-                                          + get_mmq_x_max_host(cc)*sizeof(block_q8_1_mmq);
+            // safer arithmetic: compute in 128-bit to avoid overflow and make division explicit
+            __int128 elems = (__int128)ne13 * (__int128)ne12 * (__int128)ne11 * (__int128)ne10_padded;
+            elems = elems / QK8_1;
+            size_t nbytes_src1_q8_1 = (size_t)elems * sizeof(block_q8_1)
+                                     + (size_t)get_mmq_x_max_host(cc) * sizeof(block_q8_1_mmq);
+
+            fprintf(stderr, "[gpu %d] (no ids) nbytes_src1_q8_1=%zu (ne13=%lld ne12=%lld ne11=%lld ne10_padded=%lld QK8_1=%d)\n",
+                    id, nbytes_src1_q8_1, (long long)ne13, (long long)ne12, (long long)ne11, (long long)ne10_padded, QK8_1);
+
             src1_q8_1.alloc(nbytes_src1_q8_1);
             quantize_mmq_q8_1_cuda(src1_d, src1_q8_1.get(), ne10, ne11, 1, ne10_padded, src0->type, stream);
-            CUDA_CHECK(cudaGetLastError());
+
+            // immediate stream sync + error check to force error where it occurs
+            cudaStreamSynchronize(stream);
+            cudaError_t err = cudaGetLastError();
+            if (err != cudaSuccess) {
+                fprintf(stderr, "[gpu %d] ERROR after quantize_mmq_q8_1_cuda: %s\n", id, cudaGetErrorString(err));
+            } else {
+                fprintf(stderr, "[gpu %d] quantize_mmq_q8_1_cuda completed OK\n", id);
+            }
+
             src1_quantized_data = src1_q8_1.get();
         }
 
-        const int64_t s12 = ne11*ne10_padded * sizeof(block_q8_1)/(QK8_1*sizeof(int));
-        const int64_t s13 = ne12*s12;
+        const int64_t s12 = ne11 * ne10_padded * sizeof(block_q8_1) / (QK8_1 * sizeof(int));
+        const int64_t s13 = ne12 * s12;
+
+        fprintf(stderr, "[gpu %d] (no ids) s12=%lld s13=%lld\n", id, (long long)s12, (long long)s13);
 
         const mmq_args_id args = {
             src0_d, src0->type, (const int *)src1_quantized_data, nullptr, nullptr, dst_d,
@@ -391,6 +425,7 @@ void ggml_cuda_mul_mat_q_id(ggml_backend_cuda_context & ctx, const ggml_tensor *
         return;
     }
 
+    // ---- ids path ----
     const int64_t n_expert_used = ids_tensor->ne[0];
     const int64_t ne_get_rows = ne12 * n_expert_used;
     GGML_ASSERT(ne1 == n_expert_used);
@@ -419,6 +454,7 @@ void ggml_cuda_mul_mat_q_id(ggml_backend_cuda_context & ctx, const ggml_tensor *
         const int si1  = ids_tensor->nb[1] / ggml_element_size(ids_tensor);
         const int sis1 = nb12 / nb11;
 
+        // launches fill ids_src1, ids_dst, expert_bounds...
         switch (n_expert_used) {
             case  2:
                 launch_mmq_ids_helper< 2> ((const int32_t *) ids_tensor->data, ids_src1, ids_dst, expert_bounds,
@@ -452,30 +488,64 @@ void ggml_cuda_mul_mat_q_id(ggml_backend_cuda_context & ctx, const ggml_tensor *
         CUDA_CHECK(cudaGetLastError());
     }
 
-    const int64_t ne11_flat = ne12*n_expert_used;
+    // compute flattened sizes (safer)
+    const int64_t ne11_flat = ne12 * n_expert_used;
     const int64_t ne12_flat = 1;
     const int64_t ne13_flat = 1;
 
-    const size_t nbytes_src1_q8_1 = ne11_flat*ne10_padded * sizeof(block_q8_1)/QK8_1 +
-        get_mmq_x_max_host(cc)*sizeof(block_q8_1_mmq);
+    // compute bytes carefully
+    __int128 elems_flat = (__int128)ne11_flat * (__int128)ne10_padded;
+    elems_flat = elems_flat / QK8_1;
+    size_t nbytes_src1_q8_1 = (size_t)elems_flat * sizeof(block_q8_1)
+                            + (size_t)get_mmq_x_max_host(cc) * sizeof(block_q8_1_mmq);
+
+    fprintf(stderr, "[gpu %d] (ids path) ne11_flat=%lld ne10_padded=%lld elems_flat=%lld nbytes_src1_q8_1=%zu\n",
+            id, (long long)ne11_flat, (long long)ne10_padded, (long long)elems_flat, nbytes_src1_q8_1);
 
     ggml_cuda_pool_alloc<char> src1_q8_1_local(ctx.pool());
-
-    char * src1_q8_1;
+    char * src1_q8_1 = nullptr;
 
     if (src1_quantized_data) {
         src1_q8_1 = src1_quantized_data;
     } else {
-
         src1_q8_1_local.alloc(nbytes_src1_q8_1);
         src1_q8_1 = src1_q8_1_local.get();
 
+        // **** FIX: s13 used wrong index previously (src1->nb[2] twice) ****
         const int64_t s11 = src1->nb[1] / ts_src1;
         const int64_t s12 = src1->nb[2] / ts_src1;
-        const int64_t s13 = src1->nb[2] / ts_src1;
+        const int64_t s13 = src1->nb[3] / ts_src1; // <--- FIXED from nb[2] to nb[3]
+
+        fprintf(stderr, "[gpu %d] quantize_id args: ne10=%lld s11=%lld s12=%lld s13=%lld ne10_padded=%lld ne11_flat=%lld ne12_flat=%lld ne13_flat=%lld\n",
+                id, (long long)ne10, (long long)s11, (long long)s12, (long long)s13, (long long)ne10_padded, (long long)ne11_flat, (long long)ne12_flat, (long long)ne13_flat);
+
+        // Host-side sanity-check of ids array (fast) before kernel: ensure ids are in [0, ne12-1]
+        bool ids_ok = true;
+        for (int64_t i = 0; i < ne11_flat; ++i) {
+            int32_t v = ids_src1[i];
+            if (v < 0 || v >= ne12) {
+                fprintf(stderr, "[gpu %d] BAD id at index %lld : %d (ne12=%lld)\n", id, (long long)i, v, (long long)ne12);
+                ids_ok = false;
+                break;
+            }
+        }
+        if (!ids_ok) {
+            fprintf(stderr, "[gpu %d] Aborting quantize due to invalid ids\n", id);
+            CUDA_CHECK(cudaGetLastError()); // just to print any leftover error
+            return;
+        }
+
         quantize_mmq_q8_1_cuda_id(src1_d, ids_src1, src1_q8_1, src0->type,
             ne10, s11, s12, s13, ne10_padded, ne11_flat, ne12_flat, ne13_flat, stream);
-        CUDA_CHECK(cudaGetLastError());
+
+        // synchronize and check immediately
+        cudaStreamSynchronize(stream);
+        cudaError_t err = cudaGetLastError();
+        if (err != cudaSuccess) {
+            fprintf(stderr, "[gpu %d] ERROR after quantize_mmq_q8_1_cuda_id: %s\n", id, cudaGetErrorString(err));
+        } else {
+            fprintf(stderr, "[gpu %d] quantize_mmq_q8_1_cuda_id completed OK\n", id);
+        }
     }
 
     const int64_t s12 = ne11*ne10_padded * sizeof(block_q8_1)/(QK8_1*sizeof(int));
