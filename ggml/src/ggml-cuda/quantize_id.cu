@@ -104,14 +104,23 @@ void quantize_mmq_q8_1_cuda_id(
         const float * x, const int32_t * ids, void * vy, const ggml_type type_src0,
         const int64_t ne00, const int64_t s01, const int64_t s02, const int64_t s03,
         const int64_t ne0, const int64_t ne1, const int64_t ne2, const int64_t ne3, cudaStream_t stream) {
+
+    const int id = ggml_cuda_get_device();
+    cudaSetDevice(id); // make sure
+
     GGML_ASSERT(ne00 % 4 == 0);
     GGML_ASSERT(ne0 % (4*QK8_1) == 0);
     GGML_ASSERT(ids);
 
-    // ne1 tends to assume the highest values, therefore use it as the "x" dimension of the CUDA grid:
+    // compute blocks & threads exactly and print them
     const int64_t block_num_y = (ne0 + 4*CUDA_QUANTIZE_BLOCK_SIZE_MMQ - 1) / (4*CUDA_QUANTIZE_BLOCK_SIZE_MMQ);
     const dim3 num_blocks(ne1, block_num_y, ne2*ne3);
     const dim3 block_size(CUDA_QUANTIZE_BLOCK_SIZE_MMQ, 1, 1);
+
+    fprintf(stderr, "[gpu %d] quantize_mmq_q8_1_cuda_id launch: num_blocks=(%d,%d,%d) block_size=(%d,%d,%d) ne00=%lld s01=%lld s02=%lld s03=%lld ne0=%lld ne1=%lld ne2=%lld ne3=%lld\n",
+            id, num_blocks.x, num_blocks.y, num_blocks.z, block_size.x, block_size.y, block_size.z,
+            (long long)ne00, (long long)s01, (long long)s02, (long long)s03, (long long)ne0, (long long)ne1, (long long)ne2, (long long)ne3);
+
     switch (mmq_get_q8_1_ds_layout(type_src0)) {
         case MMQ_Q8_1_DS_LAYOUT_D4:
             quantize_mmq_q8_1<MMQ_Q8_1_DS_LAYOUT_D4>
@@ -129,4 +138,14 @@ void quantize_mmq_q8_1_cuda_id(
             GGML_ABORT("fatal error");
             break;
     }
+
+    // synchronize & check immediately (makes the error surface here)
+    cudaStreamSynchronize(stream);
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "[gpu %d] ERROR after quantize kernel launch: %s\n", id, cudaGetErrorString(err));
+    } else {
+        fprintf(stderr, "[gpu %d] quantize kernel launched and returned OK\n", id);
+    }
 }
+
