@@ -325,21 +325,19 @@ void ggml_cuda_mul_mat_q_id(ggml_backend_cuda_context & ctx, const ggml_tensor *
     cudaStream_t stream = ctx.stream();
     const int cc = ggml_cuda_info().devices[ggml_cuda_get_device()].cc;
 
-    // Log entry + basic tensor info
+    // Log entry + basic tensor info (only using variables that exist in this TU)
     {
         int dev = ggml_cuda_get_device();
         fprintf(stderr, "[DBG ggml_cuda_mul_mat_q_id] enter: device=%d cc=%d src0=%p src1=%p dst=%p ids_tensor=%p ids_data=%p src1_quantized_data=%p\n",
                 dev, cc, (void*)src0, (void*)src1, (void*)dst, (void*)ids_tensor, (void*)ids_data, (void*)src1_quantized_data);
-        fprintf(stderr, "[DBG ggml_cuda_mul_mat_q_id] ne=(%lld,%lld,%lld,%lld) nb=(%lld,%lld,%lld,%lld)\n",
+        fprintf(stderr, "[DBG ggml_cuda_mul_mat_q_id] ne=(%lld,%lld,%lld,%lld) nb10=%lld nb0=%lld\n",
                 (long long)ne00, (long long)ne01, (long long)ne02, (long long)ne03,
-                (long long)nb00, (long long)nb10, (long long)nb20, (long long)nb30);
+                (long long)nb10, (long long)nb0);
     }
 
-    //const size_t ts_src0 = ggml_type_size(src0->type);
     const size_t ts_src1 = ggml_type_size(src1->type);
     const size_t ts_dst  = ggml_type_size(dst->type);
 
-    //GGML_ASSERT(       nb00       == ts_src0);
     GGML_ASSERT(       nb10       == ts_src1);
     GGML_ASSERT(       nb0        == ts_dst);
     GGML_ASSERT(!ids_tensor || ids_tensor->nb[0] == ggml_type_size(ids_tensor->type));
