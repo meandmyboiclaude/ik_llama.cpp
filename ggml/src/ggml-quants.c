@@ -689,7 +689,7 @@ void quantize_row_q4_0_ref(const float * restrict x, block_q4_0 * restrict y, in
             }
         }
 
-        const float d  = max / -8;
+        const float d  = max / -7;
         const float id = d ? 1.0f/d : 0.0f;
 
         y[i].d = GGML_FP32_TO_FP16(d);
