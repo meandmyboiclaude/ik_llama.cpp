@@ -1183,7 +1183,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         for (size_t i = 0; i < i_stop; ++i) { // i < ctx_outs.size()
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
-            gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), ml.n_tensors);
+            gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1); // ml.n_tensors
         }
     //}
     LLAMA_LOG_INFO("Thireus - DEBUG12\n");
