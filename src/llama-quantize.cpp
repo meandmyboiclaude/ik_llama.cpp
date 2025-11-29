@@ -1175,15 +1175,16 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     LLAMA_LOG_INFO("Thireus - DEBUG11\n");
 
     // Set split info if needed
-    if (n_split > 1) {
+    //if (n_split > 1) {
         // THIREUS
         size_t i = 0;
+        n_split = 1097;
         //for (size_t i = 0; i < ctx_outs.size(); ++i) {
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), ml.n_tensors);
         //}
-    }
+    //}
     LLAMA_LOG_INFO("Thireus - DEBUG12\n");
 
     int cur_split = -1;
@@ -1201,8 +1202,6 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     LLAMA_LOG_INFO("Thireus - DEBUG13\n");
     auto new_ofstream = [&](int index) {
         cur_split = index;
-        // THIREUS - overwrite cur_split and n_split to be the same as the original
-        n_split = 1097;
         GGML_ASSERT(ctx_outs[cur_split] && "Find uninitialized gguf_context");
         std::string fname = fname_out;
         if (params->keep_split) {
