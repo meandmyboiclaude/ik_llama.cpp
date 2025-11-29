@@ -1035,20 +1035,25 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
                     }
                 }
             }
+            LLAMA_LOG_INFO("Thireus - DEBUG0");
         }
     }
 
     const size_t align = GGUF_DEFAULT_ALIGNMENT;
     struct gguf_context * ctx_out = gguf_init_empty();
+    LLAMA_LOG_INFO("Thireus - DEBUG1");
 
     // copy the KV pairs from the input file
-    //gguf_set_kv     (ctx_out, ml.meta);
+    gguf_set_kv     (ctx_out, ml.meta);
+    LLAMA_LOG_INFO("Thireus - DEBUG1.1");
     gguf_set_val_u32(ctx_out, "general.quantization_version", GGML_QNT_VERSION); // TODO: use LLM_KV
+    LLAMA_LOG_INFO("Thireus - DEBUG2");
 
     // Remove split metadata
     gguf_remove_key(ctx_out, ml.llm_kv(LLM_KV_SPLIT_NO).c_str());
     gguf_remove_key(ctx_out, ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str());
     gguf_remove_key(ctx_out, ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str());
+    LLAMA_LOG_INFO("Thireus - DEBUG3");
 
     if (params->kv_overrides) {
         const std::vector<llama_model_kv_override> & overrides = *(const std::vector<llama_model_kv_override> *)params->kv_overrides;
@@ -1067,11 +1072,13 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             }
         }
     }
+    LLAMA_LOG_INFO("Thireus - DEBUG4");
 
     bool is_repacked = ml.ftype >= LLAMA_FTYPE_MOSTLY_Q4_0_R8 && ml.ftype <= LLAMA_FTYPE_MOSTLY_Q8_K_R8;
     int n_to_repack = 0, n_to_modify = 0;
     const std::vector<std::string> * repack_pattern = nullptr;
     if (params->repack_pattern) repack_pattern = (const std::vector<std::string> *)params->repack_pattern;
+    LLAMA_LOG_INFO("Thireus - DEBUG5");
 
     for (int i = 0; i < ml.n_tensors; ++i) {
         const struct ggml_tensor * meta = ml.get_tensor_meta(i);
@@ -1111,6 +1118,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             qs.has_output = true;
         }
     }
+    LLAMA_LOG_INFO("Thireus - DEBUG6");
 
     if (params->only_repack) {
         if (n_to_repack == 0 && n_to_modify == 0) {
