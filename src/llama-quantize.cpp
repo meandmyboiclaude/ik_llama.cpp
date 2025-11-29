@@ -1187,9 +1187,11 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         // THIREUS
         size_t total = tensor_ids.size() + 1; // leading 0 + one per tensor_id
         LLAMA_LOG_INFO("Thireus - DEBUG11.1\n");
-        for (size_t k = 0; k < total; ++k) {
+        gguf_set_val_u16(ctx_outs[0], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), 0);
+        gguf_set_val_u16(ctx_outs[0], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
+        gguf_set_val_i32(ctx_outs[0], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
+        for (size_t i : tensor_ids) {
             LLAMA_LOG_INFO("Thireus - DEBUG11.2\n");
-            size_t i = (k == 0) ? 0 : (tensor_ids[k - 1] + 1);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
