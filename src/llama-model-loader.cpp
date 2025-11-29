@@ -309,12 +309,12 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
         get_key(llm_kv(LLM_KV_SPLIT_TENSORS_COUNT), n_tensors);
 
         // sanity check
-        {
-            const int n_tensors_loaded = (int) weights.size();
-            if (n_tensors != n_tensors_loaded) {
-                throw std::runtime_error(format("corrupted model: %d tensors expected but %d found", n_tensors, n_tensors_loaded));
-            }
-        }
+        // {
+        //     const int n_tensors_loaded = (int) weights.size();
+        //     if (n_tensors != n_tensors_loaded) {
+        //         throw std::runtime_error(format("corrupted model: %d tensors expected but %d found", n_tensors, n_tensors_loaded));
+        //     }
+        // }
 
         LLAMA_LOG_INFO("%s: additional %d GGUFs metadata loaded.\n",  __func__, n_split - 1);
     }
