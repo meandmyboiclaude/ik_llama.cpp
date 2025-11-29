@@ -1226,6 +1226,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             close_ofstream();
             new_ofstream(weight->idx);
         }
+        LLAMA_LOG_INFO("Thireus - 15\n");
 
         const std::string name = ggml_get_name(tensor);
 
@@ -1236,12 +1237,14 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             tensor->data = read_data.data();
         }
         ml.load_data_for(tensor);
+        LLAMA_LOG_INFO("Thireus - 16\n");
 
         LLAMA_LOG_INFO("[%4d/%4d] %36s - [%s], type = %6s, ",
                ++idx, ml.n_tensors,
                ggml_get_name(tensor),
                llama_format_tensor_shape(tensor).c_str(),
                ggml_type_name(tensor->type));
+        LLAMA_LOG_INFO("Thireus - 17\n");
 
         // This used to be a regex, but <regex> has an extreme cost to compile times.
         bool quantize = name.rfind("weight") == name.size() - 6; // ends with 'weight'?
@@ -1254,6 +1257,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
 
         quantize &= params->quantize_output_tensor || name != "output.weight";
         quantize &= !params->only_copy;
+        LLAMA_LOG_INFO("Thireus - 18\n");
 
         // do not quantize expert gating tensors
         // NOTE: can't use LLM_TN here because the layer number is not known
@@ -1263,6 +1267,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             }
         }
         //quantize &= name.find("ffn_gate_inp.weight") == std::string::npos;
+        LLAMA_LOG_INFO("Thireus - 19\n");
 
         // do not quantize positional embeddings and token types (BERT)
         quantize &= name != LLM_TN(model.arch)(LLM_TENSOR_POS_EMBD,    "weight");
@@ -1276,6 +1281,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
 
         // do not quantize relative position bias (T5)
         quantize &= name.find("attn_rel_b.weight") == std::string::npos;
+        LLAMA_LOG_INFO("Thireus - 20\n");
 
         enum ggml_type new_type;
         void * new_data;
@@ -1323,6 +1329,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             LLAMA_LOG_INFO("size = %8.3f MB, type = %s\n", new_size/1024.0/1024.0, ggml_type_name(new_type));
             goto QuantizationDone;
         }
+        LLAMA_LOG_INFO("Thireus - 21\n");
 
         if (quantize) {
 
@@ -1387,6 +1394,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             // in then there's nothing to do.
             quantize = tensor->type != new_type;
         }
+        LLAMA_LOG_INFO("Thireus - 22\n");
 
         if (!quantize) {
             new_type = tensor->type;
@@ -1454,6 +1462,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
                 LLAMA_LOG_ERROR("============================================================\n\n");
                 throw std::runtime_error(format("Missing importance matrix for tensor %s in a very low-bit quantization", tensor->name));
             }
+            LLAMA_LOG_INFO("Thireus - 24\n");
 
             float * f32_data;
 
