@@ -1178,7 +1178,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     
     // Conversion to vector for better handling in C++
     const size_t * _ids = _tensor_ids + 1;           // skip length field
-    std::vector<size_t> tensor_ids(_ids, _ids + _tensor_ids[0]);
+    const std::vector<size_t> tensor_ids(_ids, _ids + _tensor_ids[0]);
 
     // Set split info if needed
     if (n_split > 1) {
