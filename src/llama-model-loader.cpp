@@ -282,6 +282,7 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
         }
 
         char split_path[PATH_MAX] = {0};
+        // THIREUS
         idx = 1;
         //for (idx = 1; idx < n_split; idx++) {
             llama_split_path(split_path, sizeof(split_path), split_prefix, idx, n_split);
