@@ -265,7 +265,7 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
     get_key(llm_kv(LLM_KV_SPLIT_COUNT), n_split, false);
 
     // Load additional GGML contexts
-    if (false) {
+    if (n_split > 1) {
         uint16_t idx = 0;
         get_key(llm_kv(LLM_KV_SPLIT_NO), idx);
         if (idx != 0) {
@@ -282,7 +282,8 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
         }
 
         char split_path[PATH_MAX] = {0};
-        for (idx = 1; idx < n_split; idx++) {
+        //for (idx = 1; idx < n_split; idx++) {
+        idx = 2;
             llama_split_path(split_path, sizeof(split_path), split_prefix, idx, n_split);
 
             struct gguf_init_params split_params = {
@@ -303,7 +304,7 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
             }
 
             gguf_free(ctx_gguf);
-        }
+        //}
 
         get_key(llm_kv(LLM_KV_SPLIT_TENSORS_COUNT), n_tensors);
 
