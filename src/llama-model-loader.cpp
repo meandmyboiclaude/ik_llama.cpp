@@ -284,7 +284,7 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
         char split_path[PATH_MAX] = {0};
         // THIREUS
         int idx;
-        for (int _idx : tensor_ids) {
+        for (int _idx : {1}) {
             idx = _idx + 1;
             llama_split_path(split_path, sizeof(split_path), split_prefix, idx, n_split);
 
