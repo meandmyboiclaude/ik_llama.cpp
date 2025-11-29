@@ -16,8 +16,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <vector>
-
 #ifdef LLAMA_SHARED
 #    if defined(_WIN32) && !defined(__MINGW32__)
 #        ifdef LLAMA_BUILD
@@ -649,7 +647,7 @@ extern "C" {
             const char * fname_out,
             const llama_model_quantize_params * params,
             const uint16_t n_split,
-            const std::vector<size_t> tensor_ids);
+            const size_t * tensor_ids);
 
     // Load a LoRA adapter from file
     // The loaded adapter will be associated to the given model, and will be free when the model is deleted

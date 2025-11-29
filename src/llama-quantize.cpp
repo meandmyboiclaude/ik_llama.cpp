@@ -11,6 +11,7 @@
 #include <regex>
 #include <mutex>
 #include <fstream>
+#include <vector>
 
 //
 // quantization
@@ -896,7 +897,11 @@ static llama_ftype repacked_ftype(llama_ftype ftype) {
     return ftype;
 }
 
-static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params, const uint16_t n_split, const std::vector<size_t> tensor_ids) {
+static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params, const uint16_t n_split, size_t * _tensor_ids) {
+
+    const size_t * _ids = _tensor_ids + 1;           // skip length field
+    std::vector<size_t> tensor_ids(_ids, _ids + _tensor_ids[0]);
+
     ggml_type default_type;
     llama_ftype ftype = params->ftype;
 
@@ -1552,7 +1557,7 @@ uint32_t llama_model_quantize(
         const char * fname_out,
         const llama_model_quantize_params * params,
         const uint16_t n_split,
-        const std::vector<size_t> tensor_ids) {
+        const size_t * tensor_ids) {
     try {
         llama_model_quantize_internal(fname_inp, fname_out, params, n_split, tensor_ids);
         return 0;
