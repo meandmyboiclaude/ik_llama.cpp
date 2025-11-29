@@ -1185,13 +1185,12 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     // Set split info if needed
     if (n_split > 1) {
         // THIREUS
-        size_t total = tensor_ids.size() + 1; // leading 0 + one per tensor_id
-        LLAMA_LOG_INFO("Thireus - DEBUG11.1 - %d\n", 0);
-        gguf_set_val_u16(ctx_outs[0], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), 0);
-        gguf_set_val_u16(ctx_outs[0], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
-        gguf_set_val_i32(ctx_outs[0], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
+        LLAMA_LOG_INFO("Thireus - DEBUG11.1 - %d\n", 1);
+        gguf_set_val_u16(ctx_outs[1], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), 1);
+        gguf_set_val_u16(ctx_outs[1], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
+        gguf_set_val_i32(ctx_outs[1], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
         for (size_t i : tensor_ids) {
-            i = i + 2;
+            i = i + 1;
             LLAMA_LOG_INFO("Thireus - DEBUG11.2 - %d \n", i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
