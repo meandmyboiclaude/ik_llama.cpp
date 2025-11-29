@@ -1176,11 +1176,12 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
 
     // Set split info if needed
     if (n_split > 1) {
-        for (size_t i = 0; i < ctx_outs.size(); ++i) {
+        size_t i = 2;
+        //for (size_t i = 0; i < ctx_outs.size(); ++i) {
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), ml.n_tensors);
-        }
+        //}
     }
     LLAMA_LOG_INFO("Thireus - DEBUG12\n");
 
