@@ -631,7 +631,7 @@ int main(int argc, char ** argv) {
     {
         const int64_t t_start_us = llama_time_us();
 
-        if (llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), &params)) {
+        if (llama_model_quantize(fname_inp.c_str(), fname_out.c_str(), &params, 1097, {0})) {
             fprintf(stderr, "%s: failed to quantize model from '%s'\n", __func__, fname_inp.c_str());
             return 1;
         }

@@ -896,7 +896,7 @@ static llama_ftype repacked_ftype(llama_ftype ftype) {
     return ftype;
 }
 
-static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params) {
+static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params, const uint16_t n_split, const std::vector<size_t> tensor_ids) {
     ggml_type default_type;
     llama_ftype ftype = params->ftype;
 
@@ -1151,14 +1151,14 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     std::vector<no_init<float>> f32_conv_buf;
     LLAMA_LOG_INFO("Thireus - DEBUG9\n");
 
-    uint16_t n_split = 1;
+    uint16_t n_outupts = 1;
     // Assume split index is continuous
     if (params->keep_split) {
         for (int i = 0; i < ml.n_tensors; ++i) {
-            n_split = std::max(uint16_t(ml.get_weight(i)->idx+1), n_split);
+            n_outupts = std::max(uint16_t(ml.get_weight(i)->idx+1), n_outupts);
         }
     }
-    std::vector<gguf_context*> ctx_outs(n_split, NULL);
+    std::vector<gguf_context*> ctx_outs(n_outupts, NULL);
     ctx_outs[0] = ctx_out;
     LLAMA_LOG_INFO("Thireus - DEBUG10\n");
 
@@ -1175,17 +1175,16 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     LLAMA_LOG_INFO("Thireus - DEBUG11\n");
 
     // Set split info if needed
-    //if (n_split > 1) {
+    if (n_split > 1) {
         // THIREUS
-        size_t i_start = 0;
-        size_t i_stop = 2;
-        n_split = 1097;
-        for (size_t i = 0; i < i_stop; ++i) { // i < ctx_outs.size()
+        size_t total = tensor_ids.size() + 1; // leading 0 + one per tensor_id
+        for (size_t k = 0; k < total; ++k) {
+            size_t i = (k == 0) ? 0 : (tensor_ids[k - 1] + 1);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
-            gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1); // ml.n_tensors
+            gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
         }
-    //}
+    }
     LLAMA_LOG_INFO("Thireus - DEBUG12\n");
 
     int cur_split = -1;
@@ -1223,8 +1222,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     const auto tn = LLM_TN(model.arch);
     new_ofstream(0);
     // THIREUS
-    int i = 0;
-    //for (int i = 0; i < ml.n_tensors; ++i) {
+    for (size_t i : tensor_ids) {
         auto weight = ml.get_weight(i);
         struct ggml_tensor * tensor = weight->tensor;
         if (weight->idx != cur_split && params->keep_split) {
@@ -1534,7 +1532,7 @@ QuantizationDone:;
         // write tensor data + padding
         fout.write((const char *) new_data, new_size);
         zeros(fout, GGML_PAD(new_size, align) - new_size);
-    //}
+    }
     close_ofstream();
     for (auto & c:ctx_outs) {
         gguf_free(c);
@@ -1552,9 +1550,11 @@ QuantizationDone:;
 uint32_t llama_model_quantize(
         const char * fname_inp,
         const char * fname_out,
-        const llama_model_quantize_params * params) {
+        const llama_model_quantize_params * params,
+        const uint16_t n_split,
+        const std::vector<size_t> tensor_ids) {
     try {
-        llama_model_quantize_internal(fname_inp, fname_out, params);
+        llama_model_quantize_internal(fname_inp, fname_out, params, n_split, tensor_ids);
         return 0;
     } catch (const std::exception & err) {
         LLAMA_LOG_ERROR("%s: failed to quantize: %s\n", __func__, err.what());
