@@ -1201,6 +1201,8 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     LLAMA_LOG_INFO("Thireus - DEBUG13\n");
     auto new_ofstream = [&](int index) {
         cur_split = index;
+        // THIREUS - overwrite cur_split and n_split to be the same as the original
+        n_split = 1097
         GGML_ASSERT(ctx_outs[cur_split] && "Find uninitialized gguf_context");
         std::string fname = fname_out;
         if (params->keep_split) {
