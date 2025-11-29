@@ -897,10 +897,7 @@ static llama_ftype repacked_ftype(llama_ftype ftype) {
     return ftype;
 }
 
-static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params, const uint16_t n_split, size_t * _tensor_ids) {
-
-    const size_t * _ids = _tensor_ids + 1;           // skip length field
-    std::vector<size_t> tensor_ids(_ids, _ids + _tensor_ids[0]);
+static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params, const uint16_t n_split, const size_t * _tensor_ids) {
 
     ggml_type default_type;
     llama_ftype ftype = params->ftype;
@@ -1178,6 +1175,10 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         gguf_add_tensor(ctx_outs[i_split], tensor);
     }
     LLAMA_LOG_INFO("Thireus - DEBUG11\n");
+    
+    // Conversion to vector for better handling in C++
+    const size_t * _ids = _tensor_ids + 1;           // skip length field
+    std::vector<size_t> tensor_ids(_ids, _ids + _tensor_ids[0]);
 
     // Set split info if needed
     if (n_split > 1) {
