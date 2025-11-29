@@ -1229,13 +1229,17 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         LLAMA_LOG_INFO("Thireus - 15\n");
 
         const std::string name = ggml_get_name(tensor);
+        LLAMA_LOG_INFO("Thireus - 15.1\n");
 
         if (!ml.use_mmap) {
+            LLAMA_LOG_INFO("Thireus - 15.2\n");
             if (read_data.size() < ggml_nbytes(tensor)) {
                 read_data.resize(ggml_nbytes(tensor));
             }
+            LLAMA_LOG_INFO("Thireus - 15.3\n");
             tensor->data = read_data.data();
         }
+        LLAMA_LOG_INFO("Thireus - 15.4\n");
         ml.load_data_for(tensor);
         LLAMA_LOG_INFO("Thireus - 16\n");
 
