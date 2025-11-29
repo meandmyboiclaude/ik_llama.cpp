@@ -1177,18 +1177,22 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     LLAMA_LOG_INFO("Thireus - DEBUG11\n");
     
     // Conversion to vector for better handling in C++
-    const size_t * _ids = _tensor_ids + 1;           // skip length field
+    const size_t * _ids = _tensor_ids + 1;
     const std::vector<size_t> tensor_ids(_ids, _ids + _tensor_ids[0]);
+
+    LLAMA_LOG_INFO("Thireus - DEBUG11.0 - %d\n", _tensor_ids[0]);
 
     // Set split info if needed
     if (n_split > 1) {
         // THIREUS
         size_t total = tensor_ids.size() + 1; // leading 0 + one per tensor_id
+        LLAMA_LOG_INFO("Thireus - DEBUG11.1\n");
         for (size_t k = 0; k < total; ++k) {
             size_t i = (k == 0) ? 0 : (tensor_ids[k - 1] + 1);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
+            LLAMA_LOG_INFO("Thireus - DEBUG11.2\n");
         }
     }
     LLAMA_LOG_INFO("Thireus - DEBUG12\n");
