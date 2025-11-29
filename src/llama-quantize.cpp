@@ -1035,25 +1035,20 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
                     }
                 }
             }
-            LLAMA_LOG_INFO("Thireus - DEBUG0");
         }
     }
 
     const size_t align = GGUF_DEFAULT_ALIGNMENT;
     struct gguf_context * ctx_out = gguf_init_empty();
-    LLAMA_LOG_INFO("Thireus - DEBUG1");
 
     // copy the KV pairs from the input file
     gguf_set_kv     (ctx_out, ml.meta);
-    LLAMA_LOG_INFO("Thireus - DEBUG1.1");
     gguf_set_val_u32(ctx_out, "general.quantization_version", GGML_QNT_VERSION); // TODO: use LLM_KV
-    LLAMA_LOG_INFO("Thireus - DEBUG2");
 
     // Remove split metadata
     gguf_remove_key(ctx_out, ml.llm_kv(LLM_KV_SPLIT_NO).c_str());
     gguf_remove_key(ctx_out, ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str());
     gguf_remove_key(ctx_out, ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str());
-    LLAMA_LOG_INFO("Thireus - DEBUG3");
 
     if (params->kv_overrides) {
         const std::vector<llama_model_kv_override> & overrides = *(const std::vector<llama_model_kv_override> *)params->kv_overrides;
@@ -1072,13 +1067,11 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             }
         }
     }
-    LLAMA_LOG_INFO("Thireus - DEBUG4");
 
     bool is_repacked = ml.ftype >= LLAMA_FTYPE_MOSTLY_Q4_0_R8 && ml.ftype <= LLAMA_FTYPE_MOSTLY_Q8_K_R8;
     int n_to_repack = 0, n_to_modify = 0;
     const std::vector<std::string> * repack_pattern = nullptr;
     if (params->repack_pattern) repack_pattern = (const std::vector<std::string> *)params->repack_pattern;
-    LLAMA_LOG_INFO("Thireus - DEBUG5");
 
     for (int i = 0; i < ml.n_tensors; ++i) {
         const struct ggml_tensor * meta = ml.get_tensor_meta(i);
@@ -1118,7 +1111,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             qs.has_output = true;
         }
     }
-    LLAMA_LOG_INFO("Thireus - DEBUG6");
+    LLAMA_LOG_INFO("Thireus - DEBUG6\n");
 
     if (params->only_repack) {
         if (n_to_repack == 0 && n_to_modify == 0) {
@@ -1129,6 +1122,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         printf("===================== Model ftype: %s: Repacked ftype: %s\n", llama_model_ftype_name(model.ftype).c_str(),
                 llama_model_ftype_name(ftype).c_str());
     }
+    LLAMA_LOG_INFO("Thireus - DEBUG7\n");
 
     gguf_set_val_u32(ctx_out, "general.file_type", ftype); // TODO: use LLM_KV
 
@@ -1141,6 +1135,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     //  - qs.n_attention_wv == 3 * model.hparams.n_layer for Encoder-Decoder models
     //  - model.arch == LLM_ARCH_DECI                    for Deci-Nemotron   models
     //
+    LLAMA_LOG_INFO("Thireus - DEBUG8\n");
     GGML_ASSERT((qs.n_attention_wv == 0 || qs.n_attention_wv == (int)model.hparams.n_layer || qs.n_attention_wv == 3 * (int)model.hparams.n_layer || model.arch == LLM_ARCH_DECI) && "n_attention_wv is unexpected");
 
     size_t total_size_org = 0;
@@ -1154,6 +1149,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     std::vector<no_init<uint8_t>> read_data;
     std::vector<no_init<uint8_t>> work;
     std::vector<no_init<float>> f32_conv_buf;
+    LLAMA_LOG_INFO("Thireus - DEBUG9\n");
 
     uint16_t n_split = 1;
     // Assume split index is continuous
@@ -1164,6 +1160,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     }
     std::vector<gguf_context*> ctx_outs(n_split, NULL);
     ctx_outs[0] = ctx_out;
+    LLAMA_LOG_INFO("Thireus - DEBUG10\n");
 
     // populate the original tensors so we get an initial meta data
     for (int i = 0; i < ml.n_tensors; ++i) {
@@ -1175,6 +1172,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         }
         gguf_add_tensor(ctx_outs[i_split], tensor);
     }
+    LLAMA_LOG_INFO("Thireus - DEBUG11\n");
 
     // Set split info if needed
     if (n_split > 1) {
@@ -1184,6 +1182,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), ml.n_tensors);
         }
     }
+    LLAMA_LOG_INFO("Thireus - DEBUG12\n");
 
     int cur_split = -1;
     std::ofstream fout;
@@ -1197,6 +1196,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             fout.close();
         }
     };
+    LLAMA_LOG_INFO("Thireus - DEBUG13\n");
     auto new_ofstream = [&](int index) {
         cur_split = index;
         GGML_ASSERT(ctx_outs[cur_split] && "Find uninitialized gguf_context");
@@ -1213,6 +1213,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         // placeholder for the meta data
         ::zeros(fout, meta_size);
     };
+    LLAMA_LOG_INFO("Thireus - DEBUG14\n");
 
     const auto tn = LLM_TN(model.arch);
     new_ofstream(0);
