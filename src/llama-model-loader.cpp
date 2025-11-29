@@ -265,7 +265,7 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
     get_key(llm_kv(LLM_KV_SPLIT_COUNT), n_split, false);
 
     // Load additional GGML contexts
-    if (n_split > 1) {
+    if (false) {
         uint16_t idx = 0;
         get_key(llm_kv(LLM_KV_SPLIT_NO), idx);
         if (idx != 0) {
