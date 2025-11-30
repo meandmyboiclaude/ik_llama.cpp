@@ -1240,7 +1240,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         }
 
         const std::string name = ggml_get_name(tensor);
-        LLAMA_LOG_INFO("Thireus - 15.1\n");
+        LLAMA_LOG_INFO("Thireus - 15.1, name: %s\n", name);
 
         if (!ml.use_mmap) {
             LLAMA_LOG_INFO("Thireus - 15.2\n");
