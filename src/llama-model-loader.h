@@ -61,7 +61,7 @@ struct llama_model_loader {
 
         llama_tensor_weight(const llama_file * file, uint16_t idx, const char * name, const struct gguf_context * gguf_ctx, ggml_tensor * tensor) : idx(idx), tensor(tensor) {
             const int tensor_idx = gguf_find_tensor(gguf_ctx, name);
-            LLAMA_LOG_INFO("Thireus - 35 - tensor_idx: %d\n", tensor_idx);
+            LLAMA_LOG_INFO("Thireus - 35 - name: %s, tensor_idx: %d\n", name, tensor_idx);
             offs = gguf_get_data_offset(gguf_ctx) + gguf_get_tensor_offset(gguf_ctx, tensor_idx);
 
             if (offs + ggml_nbytes(tensor) < offs || offs + ggml_nbytes(tensor) > file->size()) {
