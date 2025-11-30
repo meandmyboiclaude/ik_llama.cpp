@@ -1178,21 +1178,15 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
 
     // Set split info if needed
     // THIREUS
-    const size_t n_ids = 2;               // must be provided, don't guess
     if (n_split > 1) {
         LLAMA_LOG_INFO("Thireus - DEBUG11.1\n");
 
-        // sanity: ensure n_outupts and n_ids agree in expected way
-        LLAMA_LOG_INFO("n_outupts=%zu, n_ids=%zu, ctx_outs.size()=%zu\n",
-                    n_outupts, n_ids, ctx_outs.size());
+        // sanity: ensure n_outupts agree in expected way
+        LLAMA_LOG_INFO("n_outupts=%zu, ctx_outs.size()=%zu\n",
+                    n_outupts, ctx_outs.size());
 
         for (size_t k = 0; k < n_outupts; ++k) {
             LLAMA_LOG_INFO("Thireus - DEBUG11.2 k=%zu\n", k);
-
-            if (k >= n_ids) {
-                LLAMA_LOG_ERROR("missing tensor_id for k=%zu (n_ids=%zu)\n", k, n_ids);
-                continue; // or break / return error
-            }
 
             size_t tid = tensor_ids[k];
             if (tid == 0) {
