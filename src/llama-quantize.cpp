@@ -1188,21 +1188,10 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         for (size_t k = 0; k < n_outupts; ++k) {
             LLAMA_LOG_INFO("Thireus - DEBUG11.2 k=%zu\n", k);
 
-            size_t tid = tensor_ids[k];
-            if (tid == 0) {
-                LLAMA_LOG_ERROR("invalid tensor_id 0 at k=%zu\n", k);
-                continue; // avoid underflow
-            }
-
-            size_t i = tid - 1; // keep if ids are 1-based
+            size_t i = (k == 0) ? 0 : tensor_ids[k - 1] - 1;
             if (i >= ctx_outs.size()) {
                 LLAMA_LOG_ERROR("computed index i=%zu out of range (ctx_outs.size=%zu)\n",
                                 i, ctx_outs.size());
-                continue;
-            }
-
-            if (!ctx_outs[i]) {
-                LLAMA_LOG_ERROR("ctx_outs[%zu] is null\n", i);
                 continue;
             }
 
