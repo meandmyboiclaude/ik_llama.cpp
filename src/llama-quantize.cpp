@@ -1221,13 +1221,12 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         // placeholder for the meta data
         ::zeros(fout, meta_size);
     };
-    LLAMA_LOG_INFO("Thireus - DEBUG14\n");
+    LLAMA_LOG_INFO("Thireus - DEBUG14 - %d\n", ml.n_tensors);
 
     const auto tn = LLM_TN(model.arch);
     new_ofstream(0);
     // THIREUS
-    int i = 0;
-    //for (int i = 0; i < ml.n_tensors; ++i) {
+    for (size_t i = 0; i < ml.n_tensors + 1; ++i) {
         auto weight = ml.get_weight(i);
         struct ggml_tensor * tensor = weight->tensor;
         if (weight->idx != cur_split && params->keep_split) {
@@ -1537,7 +1536,7 @@ QuantizationDone:;
         // write tensor data + padding
         fout.write((const char *) new_data, new_size);
         zeros(fout, GGML_PAD(new_size, align) - new_size);
-    //}
+    }
     close_ofstream();
     for (auto & c:ctx_outs) {
         gguf_free(c);
