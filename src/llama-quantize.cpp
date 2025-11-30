@@ -1170,7 +1170,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         struct ggml_tensor * tensor = weight->tensor;
         if (ctx_outs[i_split] == NULL) {
             ctx_outs[i_split] = gguf_init_empty();
-            LLAMA_LOG_INFO("Thireus - DEBUG11, i_split: %zu\n", i_split);
+            LLAMA_LOG_INFO("Thireus - DEBUG11, i_split: %d\n", i_split);
         }
         gguf_add_tensor(ctx_outs[i_split], tensor);
     }
@@ -1184,13 +1184,13 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         // sanity: ensure n_outupts agree in expected way
         LLAMA_LOG_INFO("n_outupts=%zu, ctx_outs.size()=%zu\n", n_outupts, ctx_outs.size());
         for (int k = 0; k < ml.n_tensors + 1; ++k) {
-            LLAMA_LOG_INFO("Thireus - DEBUG11.2 k=%zu\n", k);
+            LLAMA_LOG_INFO("Thireus - DEBUG11.2 k=%d\n", k);
             size_t i = (k == 0) ? 0 : tensor_ids[k - 1];
-            LLAMA_LOG_ERROR("computed index i=%zu (ctx_outs.size=%zu)\n", i, ctx_outs.size());
+            LLAMA_LOG_ERROR("computed index i=%d (ctx_outs.size=%d)\n", i, ctx_outs.size());
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
-            LLAMA_LOG_INFO("Thireus - DEBUG11.3 k=%zu i=%zu\n", k, i);
+            LLAMA_LOG_INFO("Thireus - DEBUG11.3 k=%d i=%d\n", k, i);
         }
     }
     LLAMA_LOG_INFO("Thireus - DEBUG12\n");
@@ -1236,7 +1236,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         if (weight->idx != cur_split && params->keep_split) {
             close_ofstream();
             new_ofstream(weight->idx);
-            LLAMA_LOG_INFO("Thireus - 15 - weight->idx: %zu\n", weight->idx);
+            LLAMA_LOG_INFO("Thireus - 15 - weight->idx: %d\n", weight->idx);
         }
 
         const std::string name = ggml_get_name(tensor);
