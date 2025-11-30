@@ -858,11 +858,16 @@ void llama_model_loader::load_data_for(struct ggml_tensor * cur) const {
     LLAMA_LOG_INFO("Thireus - 49\n");
 
     if (use_mmap) {
+        LLAMA_LOG_INFO("Thireus - 49.1\n");
         const auto & mapping = mappings.at(w.idx);
+        LLAMA_LOG_INFO("Thireus - 49.2\n");
         if (cur->data == nullptr) {
+            LLAMA_LOG_INFO("Thireus - 49.3\n");
             cur->data = (uint8_t *)mapping->addr() + w.offs;
+            LLAMA_LOG_INFO("Thireus - 49.4\n");
         } else {
             memcpy(cur->data, (uint8_t *)mapping->addr() + w.offs, ggml_nbytes(cur));
+            LLAMA_LOG_INFO("Thireus - 49.5\n");
         }
     } else {
         LLAMA_LOG_INFO("Thireus - 50\n");
