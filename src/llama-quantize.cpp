@@ -1182,7 +1182,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         LLAMA_LOG_INFO("Thireus - DEBUG11.1\n");
         // sanity: ensure n_outupts agree in expected way
         LLAMA_LOG_INFO("n_outupts=%zu, ctx_outs.size()=%zu\n", n_outupts, ctx_outs.size());
-        for (size_t k = 0; k < n_outupts; ++k) {
+        for (int k = 0; k < ml.n_tensors; ++k) {
             LLAMA_LOG_INFO("Thireus - DEBUG11.2 k=%zu\n", k);
             size_t i = (k == 0) ? 0 : tensor_ids[k - 1];
             LLAMA_LOG_ERROR("computed index i=%zu (ctx_outs.size=%zu)\n", i, ctx_outs.size());
