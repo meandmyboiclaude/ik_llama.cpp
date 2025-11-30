@@ -1185,10 +1185,11 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         for (int k = 0; k < ml.n_tensors + 1; ++k) {
             LLAMA_LOG_INFO("Thireus - DEBUG11.2 k=%zu\n", k);
             size_t i = (k == 0) ? 0 : tensor_ids[k - 1];
+            size_t _i = (k == 0) ? 0 : tensor_ids[k - 1] - 1;
             LLAMA_LOG_ERROR("computed index i=%zu (ctx_outs.size=%zu)\n", i, ctx_outs.size());
-            gguf_set_val_u16(ctx_outs[k], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
-            gguf_set_val_u16(ctx_outs[k], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
-            gguf_set_val_i32(ctx_outs[k], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
+            gguf_set_val_u16(ctx_outs[_i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
+            gguf_set_val_u16(ctx_outs[_i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
+            gguf_set_val_i32(ctx_outs[_i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
             LLAMA_LOG_INFO("Thireus - DEBUG11.3 k=%zu i=%zu\n", k, i);
         }
     }
