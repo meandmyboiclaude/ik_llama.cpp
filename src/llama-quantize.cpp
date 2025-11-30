@@ -1226,7 +1226,8 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     const auto tn = LLM_TN(model.arch);
     new_ofstream(0);
     // THIREUS
-    for (size_t i = 0; i < ml.n_tensors; ++i) {
+    for (size_t tensor_id : tensor_ids) {
+	    int i = tensor_id - 1 ;
         auto weight = ml.get_weight(i);
         struct ggml_tensor * tensor = weight->tensor;
         if (weight->idx != cur_split && params->keep_split) {
