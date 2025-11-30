@@ -1154,11 +1154,11 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
 
     uint16_t n_outupts = 1;
     // Assume split index is continuous
-    if (params->keep_split) {
-        for (int i = 0; i < ml.n_tensors; ++i) {
-            n_outupts = std::max(uint16_t(ml.get_weight(i)->idx+1), n_outupts);
-        }
-    }
+    // if (params->keep_split) {
+    //     for (int i = 0; i < ml.n_tensors; ++i) {
+    //         n_outupts = std::max(uint16_t(ml.get_weight(i)->idx+1), n_outupts);
+    //     }
+    // }
     std::vector<gguf_context*> ctx_outs(n_outupts, NULL);
     ctx_outs[0] = ctx_out;
     LLAMA_LOG_INFO("Thireus - DEBUG10\n");
