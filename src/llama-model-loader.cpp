@@ -283,7 +283,7 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
 
         char split_path[PATH_MAX] = {0};
         // THIREUS
-        for (uint16_t idx : {1, 2}) {
+        for (uint16_t idx : {2}) {
             llama_split_path(split_path, sizeof(split_path), split_prefix, idx, n_split);
 
             struct gguf_init_params split_params = {
