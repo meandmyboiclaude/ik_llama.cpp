@@ -1177,16 +1177,46 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     LLAMA_LOG_INFO("Thireus - DEBUG11.0 - %d\n", n_outupts);
 
     // Set split info if needed
+    // THIREUS
+    const size_t n_ids = 2;               // must be provided, don't guess
     if (n_split > 1) {
-        // THIREUS
         LLAMA_LOG_INFO("Thireus - DEBUG11.1\n");
+
+        // sanity: ensure n_outupts and n_ids agree in expected way
+        LLAMA_LOG_INFO("n_outupts=%zu, n_ids=%zu, ctx_outs.size()=%zu\n",
+                    n_outupts, n_ids, ctx_outs.size());
+
         for (size_t k = 0; k < n_outupts; ++k) {
-            LLAMA_LOG_INFO("Thireus - DEBUG11.2\n");
-            size_t i = tensor_ids[k] - 1;
+            LLAMA_LOG_INFO("Thireus - DEBUG11.2 k=%zu\n", k);
+
+            if (k >= n_ids) {
+                LLAMA_LOG_ERROR("missing tensor_id for k=%zu (n_ids=%zu)\n", k, n_ids);
+                continue; // or break / return error
+            }
+
+            size_t tid = tensor_ids[k];
+            if (tid == 0) {
+                LLAMA_LOG_ERROR("invalid tensor_id 0 at k=%zu\n", k);
+                continue; // avoid underflow
+            }
+
+            size_t i = tid - 1; // keep if ids are 1-based
+            if (i >= ctx_outs.size()) {
+                LLAMA_LOG_ERROR("computed index i=%zu out of range (ctx_outs.size=%zu)\n",
+                                i, ctx_outs.size());
+                continue;
+            }
+
+            if (!ctx_outs[i]) {
+                LLAMA_LOG_ERROR("ctx_outs[%zu] is null\n", i);
+                continue;
+            }
+
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
-            LLAMA_LOG_INFO("Thireus - DEBUG11.3\n");
+
+            LLAMA_LOG_INFO("Thireus - DEBUG11.3 k=%zu i=%zu\n", k, i);
         }
     }
     LLAMA_LOG_INFO("Thireus - DEBUG12\n");
