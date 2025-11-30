@@ -859,7 +859,7 @@ void llama_model_loader::load_data_for(struct ggml_tensor * cur) const {
 
     if (use_mmap) {
         LLAMA_LOG_INFO("Thireus - 49.1 - w.idx: %d\n", w.idx);
-        const auto & mapping = mappings.at(w.idx);
+        const auto & mapping = mappings.at(0);
         LLAMA_LOG_INFO("Thireus - 49.2\n");
         if (cur->data == nullptr) {
             LLAMA_LOG_INFO("Thireus - 49.3\n");
