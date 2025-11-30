@@ -1152,7 +1152,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     std::vector<no_init<float>> f32_conv_buf;
     LLAMA_LOG_INFO("Thireus - DEBUG9\n");
 
-    uint16_t n_outupts = 1;
+    uint16_t n_outupts = 2;
     // Assume split index is continuous
     // if (params->keep_split) {
     //     for (int i = 0; i < ml.n_tensors; ++i) {
