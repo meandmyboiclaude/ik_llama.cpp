@@ -1231,14 +1231,13 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     new_ofstream(0);
     // THIREUS
     for (size_t k = 0; k < ml.n_tensors; ++k) {
-        size_t i = tensor_ids[k] - 1;
         auto weight = ml.get_weight(k);
         struct ggml_tensor * tensor = weight->tensor;
         if (weight->idx != cur_split && params->keep_split) {
             close_ofstream();
             new_ofstream(weight->idx);
+            LLAMA_LOG_INFO("Thireus - 15 - weight->idx: %zu\n", weight->idx);
         }
-        LLAMA_LOG_INFO("Thireus - 15\n");
 
         const std::string name = ggml_get_name(tensor);
         LLAMA_LOG_INFO("Thireus - 15.1\n");
