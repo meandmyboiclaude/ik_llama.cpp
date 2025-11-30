@@ -1170,6 +1170,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         struct ggml_tensor * tensor = weight->tensor;
         if (ctx_outs[i_split] == NULL) {
             ctx_outs[i_split] = gguf_init_empty();
+            LLAMA_LOG_INFO("Thireus - DEBUG11, i_split: %zu\n", i_split);
         }
         gguf_add_tensor(ctx_outs[i_split], tensor);
     }
