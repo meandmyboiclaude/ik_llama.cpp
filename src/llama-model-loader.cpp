@@ -852,14 +852,14 @@ void llama_model_loader::get_mapping_range(size_t * first, size_t * last, void *
 }
 
 // for backwards compatibility, does not support ggml-backend
-void llama_model_loader::load_data_for(struct ggml_tensor * cur) const {
+void llama_model_loader::load_data_for(struct ggml_tensor * cur, const size_t _idx) const {
     LLAMA_LOG_INFO("Thireus - 48\n");
     const auto & w = require_weight(ggml_get_name(cur));
     LLAMA_LOG_INFO("Thireus - 49\n");
 
     if (use_mmap) {
-        LLAMA_LOG_INFO("Thireus - 49.1 - w.idx: %d\n", w.idx);
-        const auto & mapping = mappings.at(0);
+        LLAMA_LOG_INFO("Thireus - 49.1 - _idx: %d\n", _idx);
+        const auto & mapping = mappings.at(_idx);
         LLAMA_LOG_INFO("Thireus - 49.2\n");
         if (cur->data == nullptr) {
             LLAMA_LOG_INFO("Thireus - 49.3\n");
@@ -875,7 +875,7 @@ void llama_model_loader::load_data_for(struct ggml_tensor * cur) const {
         LLAMA_LOG_INFO("Thireus - 51\n");
         GGML_ASSERT(w.idx < files.size());
         LLAMA_LOG_INFO("Thireus - 52\n");
-        const auto & file = files.at(w.idx);
+        const auto & file = files.at(_idx);
         LLAMA_LOG_INFO("Thireus - 53\n");
         file->seek(w.offs, SEEK_SET);
         LLAMA_LOG_INFO("Thireus - 54\n");

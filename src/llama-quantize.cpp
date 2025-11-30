@@ -1251,7 +1251,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             tensor->data = read_data.data();
         }
         LLAMA_LOG_INFO("Thireus - 15.4\n");
-        ml.load_data_for(tensor);
+        ml.load_data_for(tensor, k);
         LLAMA_LOG_INFO("Thireus - 16\n");
 
         LLAMA_LOG_INFO("[%4d/%4d] %36s - [%s], type = %6s, ",

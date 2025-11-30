@@ -158,7 +158,7 @@ struct llama_model_loader {
     void get_mapping_range(size_t * first, size_t * last, void ** addr, int idx, ggml_context * ctx) const;
 
     // for backwards compatibility, does not support ggml-backend
-    void load_data_for(struct ggml_tensor * cur) const;
+    void load_data_for(struct ggml_tensor * cur, const size_t _idx) const;
 
     size_t size_done = 0;
     size_t size_data = 0;
