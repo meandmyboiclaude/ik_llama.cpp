@@ -11,7 +11,6 @@
 #include <regex>
 #include <mutex>
 #include <fstream>
-#include <vector>
 
 //
 // quantization
@@ -897,7 +896,7 @@ static llama_ftype repacked_ftype(llama_ftype ftype) {
     return ftype;
 }
 
-static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params, const uint16_t n_split, const size_t * _tensor_ids) {
+static void llama_model_quantize_internal(const std::string & fname_inp, const std::string & fname_out, const llama_model_quantize_params * params, const uint16_t n_split, const size_t * tensor_ids) {
 
     ggml_type default_type;
     llama_ftype ftype = params->ftype;
@@ -1175,18 +1174,13 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
         gguf_add_tensor(ctx_outs[i_split], tensor);
     }
     LLAMA_LOG_INFO("Thireus - DEBUG11\n");
-    
-    // Conversion to vector for better handling in C++
-    const size_t * _ids = _tensor_ids + 1;
-    const std::vector<size_t> tensor_ids(_ids, _ids + _tensor_ids[0]);
-
-    LLAMA_LOG_INFO("Thireus - DEBUG11.0 - %d\n", _tensor_ids[0]);
+    LLAMA_LOG_INFO("Thireus - DEBUG11.0 - %d\n", tensor_ids[0]);
 
     // Set split info if needed
     if (n_split > 1) {
         // THIREUS
         LLAMA_LOG_INFO("Thireus - DEBUG11.1\n");
-        for (size_t i = 0; i < ml.n_tensors; ++i) {
+        for (size_t i = 0; i < ml.n_tensors + 1; ++i) {
             LLAMA_LOG_INFO("Thireus - DEBUG11.2 - %d\n", (int)i);
             //size_t i = (k == 0) ? 0 : (_tensor_ids[k] + 1);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
@@ -1232,7 +1226,7 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     const auto tn = LLM_TN(model.arch);
     new_ofstream(0);
     // THIREUS
-    for (size_t i : tensor_ids) {
+    for (size_t i = 0; i < ml.n_tensors + 1; ++i) {
         auto weight = ml.get_weight(i);
         struct ggml_tensor * tensor = weight->tensor;
         if (weight->idx != cur_split && params->keep_split) {
