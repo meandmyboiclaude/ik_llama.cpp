@@ -1180,9 +1180,9 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     if (n_split > 1) {
         // THIREUS
         LLAMA_LOG_INFO("Thireus - DEBUG11.1\n");
-        for (size_t i = 0; i < n_outupts; ++i) {
+        for (size_t k = 0; k < n_outupts; ++k) {
             LLAMA_LOG_INFO("Thireus - DEBUG11.2\n");
-            //size_t i = (k == 0) ? 0 : (_tensor_ids[k] + 1);
+            size_t i = tensor_ids[k] - 1;
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_NO).c_str(), i);
             gguf_set_val_u16(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_COUNT).c_str(), n_split);
             gguf_set_val_i32(ctx_outs[i], ml.llm_kv(LLM_KV_SPLIT_TENSORS_COUNT).c_str(), n_split - 1);
@@ -1226,8 +1226,8 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
     const auto tn = LLM_TN(model.arch);
     new_ofstream(0);
     // THIREUS
-    for (size_t tensor_id : tensor_ids) {
-	    int i = tensor_id - 1 ;
+    for (size_t k = 0; k < ml.n_tensors; ++k) {
+        size_t i = tensor_ids[k] - 1;
         auto weight = ml.get_weight(i);
         struct ggml_tensor * tensor = weight->tensor;
         if (weight->idx != cur_split && params->keep_split) {
