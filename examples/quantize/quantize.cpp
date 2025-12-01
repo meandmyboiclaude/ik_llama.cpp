@@ -168,7 +168,7 @@ static void usage(const char * executable) {
     printf("  --custom-q regex1=type1,regex2=type2...: use this to specify custom quantization type rules.\n\n");
     printf("  --repack Repack all tensors to the corresponding _r4/8 variant if available.\n\n");
     printf("  --repack-pattern Comma separated list of regexs to use for matching tensor names to be repacked.\n\n");
-    printf("  --individual-tensors LIST: Comma-separated list of split IDs (integers >= 1). Requires --keep-split to be set. Example: --individual-tensors 2,5,1094 will produce tensor_ids = {1,4,1093}.\n\n");
+    printf("  --individual-tensors LIST: Comma-separated list of split IDs (integers >= 2). Requires --keep-split to be set. Example: --individual-tensors 2,5,1094 will produce tensor_ids = {1,4,1093}.\n\n");
     printf("Additional specific tensor quantization types used in the custom quant scheme 'CQS (default is Q2_K):\n");
     printf("      --attn-q-type ggml_type: use this ggml_type for the attn_q.weight tensor.\n");
     printf("      --attn-k-type ggml_type: use this ggml_type for the attn_k.weight tensor.\n");
@@ -489,8 +489,8 @@ int main(int argc, char ** argv) {
                     if (s.empty()) continue;
                     try {
                         int v = std::stoi(s);
-                        if (v < 1) {
-                            fprintf(stderr, "%s: invalid individual tensor id '%s' (must be >= 1)\n", __func__, s.c_str());
+                        if (v < 2) {
+                            fprintf(stderr, "%s: invalid individual tensor id '%s' (must be >= 2)\n", __func__, s.c_str());
                             usage(argv[0]);
                         }
                         individual_tensors_list.push_back(v);
@@ -689,7 +689,7 @@ int main(int argc, char ** argv) {
         for (int v : individual_tensors_list) {
             // subtract 1 (convert to zero-based)
             int zero_based = v - 1;
-            if (zero_based < 0) continue; // should not happen because v >= 1 was enforced
+            if (zero_based <= 0) continue; // should not happen because v >= 2 was enforced
             tensor_ids_vec.push_back(static_cast<size_t>(zero_based));
         }
 
@@ -697,6 +697,8 @@ int main(int argc, char ** argv) {
             fprintf(stderr, "%s: --individual-tensors resulted in an empty list\n", argv[0]);
             usage(argv[0]);
         }
+
+        tensor_ids_vec.push_back(static_cast<size_t>(0)); // Add 0 at the end, which is used for llama_model_loader to know when to end processing
     }
 
     // obtain the chunks count (previously hardcoded 1097) from the input filename.

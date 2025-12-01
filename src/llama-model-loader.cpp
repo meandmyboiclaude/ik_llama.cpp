@@ -207,6 +207,8 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
         bool repack_tensors, bool use_thp, bool merge_qkv,
         const llama_model_kv_override * param_overrides_p,
         const llama_model_tensor_buft_override * param_tensor_buft_overrides_p, const size_t * tensor_ids) {
+    if (!tensor_ids) return; // or throw
+
     int trace = 0;
     if (getenv("LLAMA_TRACE")) {
         trace = atoi(getenv("LLAMA_TRACE"));
@@ -283,7 +285,13 @@ llama_model_loader::llama_model_loader(const std::string & fname, bool use_mmap,
 
         char split_path[PATH_MAX] = {0};
         // THIREUS
-        for (uint16_t idx : tensor_ids) {
+        for (const size_t *p = tensor_ids; *p != 0; ++p) {
+            size_t id = *p;
+            if (id > std::numeric_limits<uint16_t>::max()) {
+                // handle overflow: clamp, log, or throw
+                throw std::out_of_range("tensor id doesn't fit in uint16_t");
+            }
+            uint16_t idx = static_cast<uint16_t>(id);
             llama_split_path(split_path, sizeof(split_path), split_prefix, idx, n_split);
 
             struct gguf_init_params split_params = {
