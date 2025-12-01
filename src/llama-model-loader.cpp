@@ -861,42 +861,42 @@ void llama_model_loader::get_mapping_range(size_t * first, size_t * last, void *
 
 // for backwards compatibility, does not support ggml-backend
 void llama_model_loader::load_data_for(struct ggml_tensor * cur, const size_t _idx) const {
-    LLAMA_LOG_INFO("Thireus - 48\n");
+    // LLAMA_LOG_INFO("Thireus - 48\n");
     const auto & w = require_weight(ggml_get_name(cur));
-    LLAMA_LOG_INFO("Thireus - 49\n");
+    // LLAMA_LOG_INFO("Thireus - 49\n");
 
     if (use_mmap) {
-        LLAMA_LOG_INFO("Thireus - 49.1 - _idx: %d\n", _idx);
+        // LLAMA_LOG_INFO("Thireus - 49.1 - _idx: %d\n", _idx);
         const auto & mapping = mappings.at(_idx);
-        LLAMA_LOG_INFO("Thireus - 49.2\n");
+        // LLAMA_LOG_INFO("Thireus - 49.2\n");
         if (cur->data == nullptr) {
-            LLAMA_LOG_INFO("Thireus - 49.3\n");
+            // LLAMA_LOG_INFO("Thireus - 49.3\n");
             cur->data = (uint8_t *)mapping->addr() + w.offs;
-            LLAMA_LOG_INFO("Thireus - 49.4\n");
+            // LLAMA_LOG_INFO("Thireus - 49.4\n");
         } else {
             memcpy(cur->data, (uint8_t *)mapping->addr() + w.offs, ggml_nbytes(cur));
-            LLAMA_LOG_INFO("Thireus - 49.5\n");
+            // LLAMA_LOG_INFO("Thireus - 49.5\n");
         }
     } else {
-        LLAMA_LOG_INFO("Thireus - 50\n");
+        // LLAMA_LOG_INFO("Thireus - 50\n");
         GGML_ASSERT(cur->data != nullptr);
-        LLAMA_LOG_INFO("Thireus - 51\n");
+        // LLAMA_LOG_INFO("Thireus - 51\n");
         GGML_ASSERT(w.idx < files.size());
-        LLAMA_LOG_INFO("Thireus - 52\n");
+        // LLAMA_LOG_INFO("Thireus - 52\n");
         const auto & file = files.at(_idx);
-        LLAMA_LOG_INFO("Thireus - 53\n");
+        // LLAMA_LOG_INFO("Thireus - 53\n");
         file->seek(w.offs, SEEK_SET);
-        LLAMA_LOG_INFO("Thireus - 54\n");
+        // LLAMA_LOG_INFO("Thireus - 54\n");
         file->read_raw(cur->data, ggml_nbytes(cur));
-        LLAMA_LOG_INFO("Thireus - 55\n");
+        // LLAMA_LOG_INFO("Thireus - 55\n");
     }
 
-    LLAMA_LOG_INFO("Thireus - 56\n");
+    // LLAMA_LOG_INFO("Thireus - 56\n");
     if (check_tensors && !ggml_validate_row_data(cur->type, cur->data, ggml_nbytes(cur))) {
-        LLAMA_LOG_INFO("Thireus - 57\n");
+        // LLAMA_LOG_INFO("Thireus - 57\n");
         throw std::runtime_error(format("tensor '%s' has invalid data", ggml_get_name(cur)));
     }
-    LLAMA_LOG_INFO("Thireus - 58\n");
+    // LLAMA_LOG_INFO("Thireus - 58\n");
 }
 
 // Returns false if cancelled by progress_callback
