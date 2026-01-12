@@ -76,7 +76,7 @@ jobs:
           name: llama-bin-macos-arm64.zip
 
   macOS-x64:
-    if: false
+    #if: false
     runs-on: macos-13
 
     steps:
@@ -108,7 +108,7 @@ jobs:
           cmake -B build \
             -DCMAKE_BUILD_RPATH="@loader_path" \
             -DLLAMA_FATAL_WARNINGS=ON \
-            -DGGML_METAL=OFF \
+            -DGGML_METAL=ON \
             -DGGML_RPC=ON \
             -DGGML_MAX_CONTEXTS=2048
           cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
@@ -421,6 +421,7 @@ jobs:
           name: llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip
 
   windows-cuda:
+    if: false
     runs-on: windows-2022
 
     strategy:
@@ -711,13 +712,13 @@ jobs:
     needs:
       #- windows
       #- windows-cpu
-      - windows-cuda
+      #- windows-cuda
       #- windows-sycl
       #- windows-hip
       #- ubuntu-22-cpu
       #- ubuntu-22-vulkan
       #- macOS-arm64
-      #- macOS-x64
+      - macOS-x64
       #- ios-xcode-build
 
     steps:
