@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.14) # for add_link_options and implicit target 
 project("ggml" C CXX)
 include(CheckIncludeFileCXX)
 
+if (CMAKE_C_COMPILER_ID MATCHES "Clang" OR CMAKE_C_COMPILER_ID STREQUAL "AppleClang" OR CMAKE_C_COMPILER_ID STREQUAL "GNU")
+  # Do not treat unreachable-code-break as an error (clang/gcc accept -Wno-error=...)
+  add_compile_options(-Wno-error=unreachable-code-break)
+endif()
+
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 if (NOT XCODE AND NOT MSVC AND NOT CMAKE_BUILD_TYPE)
