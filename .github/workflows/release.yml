@@ -108,7 +108,7 @@ jobs:
           cmake -B build \
             -DCMAKE_BUILD_RPATH="@loader_path" \
             -DLLAMA_FATAL_WARNINGS=ON \
-            -DGGML_METAL=ON \
+            -DGGML_METAL=OFF \
             -DGGML_RPC=ON \
             -DGGML_MAX_CONTEXTS=2048
           cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
