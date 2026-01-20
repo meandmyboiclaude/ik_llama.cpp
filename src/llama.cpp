@@ -7687,17 +7687,14 @@ void llama_sample_dry([[maybe_unused]] struct llama_context* ctx, struct llama_s
     llama_sampler_dry_apply(smpl, candidates_p);
 }
 
-void llama_sample_adaptive_p(
-    [[maybe_unused]] struct llama_context * ctx,
-                   llama_token_data_array * candidates,
-          struct llama_sampler_adaptive_p * adapt_p_ctx)
-{
-    llama_sample_adaptive_p_impl(candidates, adapt_p_ctx);
+void llama_sample_adaptive_p(llama_context * ctx,
+                   llama_token_data_array  * candidates,
+                 llama_sampler_adaptive_p  * adapt_p_ctx) {
+    llama_sample_adaptive_p_impl(&ctx->sampling, candidates, adapt_p_ctx);
 }
 
-void llama_prep_adaptive_p(llama_token_data_array * candidates, struct llama_sampler_adaptive_p * adapt_p_ctx)
-{
-    llama_prep_adaptive_p_impl(candidates, adapt_p_ctx);
+void llama_prep_adaptive_p(struct llama_context * ctx, llama_token_data_array * candidates, struct llama_sampler_adaptive_p * adapt_p_ctx) {
+    llama_prep_adaptive_p_impl(&ctx->sampling, candidates, adapt_p_ctx);
 }
 
 
@@ -7743,8 +7740,7 @@ llama_token llama_sample_token(struct llama_context * ctx, llama_token_data_arra
 llama_token llama_sample_token_adaptive_p(
                struct llama_context * ctx,
              llama_token_data_array * candidates,
-    struct llama_sampler_adaptive_p * adapt_p_ctx)
-{
+    struct llama_sampler_adaptive_p * adapt_p_ctx) {
     return llama_sample_token_adaptive_p_impl(&ctx->sampling, candidates, adapt_p_ctx);
 }
 
@@ -7800,9 +7796,8 @@ void llama_sampler_dry_accept(struct llama_sampler_dry* smpl, llama_token token)
 }
 
 
-struct llama_sampler_adaptive_p * llama_init_adaptive_p(const float target, const float decay, const uint32_t seed)
-{
-    return llama_init_adaptive_p_impl(target, decay, seed);
+struct llama_sampler_adaptive_p * llama_init_adaptive_p(int n_vocab, const float target, const float decay, const uint32_t seed) {
+    return llama_init_adaptive_p_impl(n_vocab, target, decay, seed);
 }
 
 
