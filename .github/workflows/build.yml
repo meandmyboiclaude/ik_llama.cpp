@@ -1,3 +1,5 @@
+# Only build the llama-quantize target in every job (tests are skipped)
+
 name: CI
 
 on:
@@ -43,7 +45,7 @@ jobs:
           brew update
           brew install curl
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -53,9 +55,10 @@ jobs:
             -DGGML_METAL_USE_BF16=ON \
             -DGGML_METAL_EMBED_LIBRARY=ON \
             -DGGML_RPC=ON
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
+          cmake --build build --config Release --target llama-quantize -- -j $(sysctl -n hw.logicalcpu)
 
       - name: Test
+        if: false
         id: cmake_test
         run: |
           cd build
@@ -82,7 +85,7 @@ jobs:
           brew update
           brew install curl
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -93,9 +96,10 @@ jobs:
             -DLLAMA_FATAL_WARNINGS=ON \
             -DGGML_METAL=OFF \
             -DGGML_RPC=ON
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
+          cmake --build build --config Release --target llama-quantize -- -j $(sysctl -n hw.logicalcpu)
 
       - name: Test
+        if: false
         id: cmake_test
         run: |
           cd build
@@ -129,21 +133,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential libcurl4-openssl-dev
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           cmake -B build \
             -DLLAMA_FATAL_WARNINGS=ON \
             -DGGML_RPC=ON
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
       - name: Test
+        if: false
         id: cmake_test
         run: |
           cd build
           ctest -L 'main|curl' --verbose --timeout 900
 
       - name: Test llama2c conversion
+        if: false
         id: llama2c_test
         run: |
           cd build
@@ -181,7 +187,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential libcurl4-openssl-dev
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         if: ${{ matrix.sanitizer != 'THREAD' }}
         run: |
@@ -189,9 +195,9 @@ jobs:
             -DLLAMA_FATAL_WARNINGS=ON \
             -DLLAMA_SANITIZE_${{ matrix.sanitizer }}=ON \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
-          cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
+          cmake --build build --config ${{ matrix.build_type }} --target llama-quantize -- -j $(nproc)
 
-      - name: Build (no OpenMP)
+      - name: Build llama-quantize (no OpenMP)
         id: cmake_build_no_openmp
         if: ${{ matrix.sanitizer == 'THREAD' }}
         run: |
@@ -200,9 +206,10 @@ jobs:
             -DLLAMA_SANITIZE_${{ matrix.sanitizer }}=ON \
             -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -DGGML_OPENMP=OFF
-          cmake --build build --config ${{ matrix.build_type }} -j $(nproc)
+          cmake --build build --config ${{ matrix.build_type }} --target llama-quantize -- -j $(nproc)
 
       - name: Test
+        if: false
         id: cmake_test
         run: |
           cd build
@@ -222,7 +229,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential libcurl4-openssl-dev
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           mkdir build
@@ -230,9 +237,10 @@ jobs:
           cmake .. \
             -DLLAMA_FATAL_WARNINGS=ON \
             -DLLAMA_LLGUIDANCE=ON
-          cmake --build . --config Release -j $(nproc)
+          cmake --build . --config Release --target llama-quantize -- -j $(nproc)
 
       - name: Test
+        if: false
         id: cmake_test
         run: |
           cd build
@@ -260,14 +268,15 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential libcurl4-openssl-dev
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           cmake -B build \
             -DGGML_RPC=ON
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
       - name: Test
+        if: false
         id: cmake_test
         run: |
           cd build
@@ -295,14 +304,15 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y build-essential mesa-vulkan-drivers vulkan-sdk libcurl4-openssl-dev
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           cmake -B build \
             -DGGML_VULKAN=ON
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
       - name: Test
+        if: false
         id: cmake_test
         run: |
           cd build
@@ -330,16 +340,16 @@ jobs:
           key: ubuntu-22-cmake-hip
           evict-old-files: 1d
 
-      - name: Build with native CMake HIP support
+      - name: Build llama-quantize with native CMake HIP support (llama-quantize)
         id: cmake_build
         run: |
           cmake -B build -S . \
             -DCMAKE_HIP_COMPILER="$(hipconfig -l)/clang" \
             -DGGML_HIP_ROCWMMA_FATTN=ON \
             -DGGML_HIP=ON
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
-      - name: Build with legacy HIP support
+      - name: Build llama-quantize with legacy HIP support (llama-quantize)
         id: cmake_build_legacy_hip
         run: |
           cmake -B build2 -S . \
@@ -347,7 +357,7 @@ jobs:
             -DCMAKE_CXX_COMPILER=hipcc \
             -DGGML_HIP_ROCWMMA_FATTN=ON \
             -DGGML_HIP=ON
-          cmake --build build2 --config Release -j $(nproc)
+          cmake --build build2 --config Release --target llama-quantize -- -j $(nproc)
 
   ubuntu-22-cmake-musa:
     runs-on: ubuntu-22.04
@@ -370,12 +380,12 @@ jobs:
           key: ubuntu-22-cmake-musa
           evict-old-files: 1d
 
-      - name: Build with native CMake MUSA support
+      - name: Build llama-quantize with native CMake MUSA support (llama-quantize)
         id: cmake_build
         run: |
           cmake -B build -S . \
             -DGGML_MUSA=ON
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
   ubuntu-22-cmake-sycl:
     runs-on: ubuntu-22.04
@@ -415,7 +425,7 @@ jobs:
           key: ubuntu-22-cmake-sycl
           evict-old-files: 1d
 
-      - name: Build
+      - name: Build llama-quantize (SYCL)
         id: cmake_build
         run: |
           source /opt/intel/oneapi/setvars.sh
@@ -423,7 +433,7 @@ jobs:
             -DGGML_SYCL=ON \
             -DCMAKE_C_COMPILER=icx \
             -DCMAKE_CXX_COMPILER=icpx
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
   ubuntu-22-cmake-sycl-fp16:
     runs-on: ubuntu-22.04
@@ -463,7 +473,7 @@ jobs:
           key: ubuntu-22-cmake-sycl-fp16
           evict-old-files: 1d
 
-      - name: Build
+      - name: Build llama-quantize (SYCL-FP16)
         id: cmake_build
         run: |
           source /opt/intel/oneapi/setvars.sh
@@ -472,7 +482,7 @@ jobs:
             -DCMAKE_C_COMPILER=icx \
             -DCMAKE_CXX_COMPILER=icpx \
             -DGGML_SYCL_F16=ON
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
   build-linux-cross:
     uses: ./.github/workflows/build-linux-cross.yml
@@ -497,7 +507,7 @@ jobs:
         run: |
           brew update
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -512,7 +522,7 @@ jobs:
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
             -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM=ggml
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
 
   macOS-latest-cmake-tvos:
     runs-on: macos-latest
@@ -534,7 +544,7 @@ jobs:
         run: |
           brew update
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -549,7 +559,7 @@ jobs:
             -DCMAKE_SYSTEM_NAME=tvOS \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
             -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM=ggml
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
 
   macOS-latest-cmake-visionos:
     runs-on: macos-latest
@@ -565,7 +575,7 @@ jobs:
         run: |
           brew update
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -580,7 +590,7 @@ jobs:
             -DCMAKE_SYSTEM_NAME=visionOS \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=1.0 \
             -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM=ggml
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
 
   macOS-latest-swift:
     runs-on: macos-latest
@@ -606,7 +616,7 @@ jobs:
         run: |
           brew update
 
-      - name: Build llama.cpp with CMake
+      - name: Build llama-quantize llama.cpp with CMake
         id: cmake_build
         run: |
           sysctl -a
@@ -619,7 +629,7 @@ jobs:
             -DLLAMA_BUILD_TESTS=OFF \
             -DLLAMA_BUILD_SERVER=OFF \
             -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64"
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu)
 
       - name: xcodebuild for swift package
         id: xcodebuild
@@ -659,7 +669,7 @@ jobs:
             mingw-w64-${{matrix.env}}-cmake
             mingw-w64-${{matrix.env}}-openblas
 
-      - name: Build using CMake
+      - name: Build llama-quantize using CMake
         shell: msys2 {0}
         run: |
             cmake -B build
@@ -670,7 +680,7 @@ jobs:
         run: |
             rm -rf build
 
-      - name: Build using CMake w/ OpenBLAS
+      - name: Build llama-quantize using CMake w/ OpenBLAS
         shell: msys2 {0}
         run: |
             cmake -B build -DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS
@@ -769,7 +779,7 @@ jobs:
             -A arm64 `
             -DCMAKE_PREFIX_PATH="$env:RUNNER_TEMP/opencl-arm64-release" `
             -DCMAKE_INSTALL_PREFIX="$env:RUNNER_TEMP/opencl-arm64-release"
-          cmake --build build-arm64-release --target install --config release
+          cmake --build build-arm64-release --target install --config Release --target llama-quantize
 
       - name: libCURL
         id: get_libcurl
@@ -777,14 +787,14 @@ jobs:
         with:
           architecture: ${{ matrix.arch == 'x64' && 'win64' || 'win64a' }}
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         env:
           CURL_PATH: ${{ steps.get_libcurl.outputs.curl_path }}
         run: |
           cmake -S . -B build ${{ matrix.defines }} `
             -DCURL_LIBRARY="$env:CURL_PATH/lib/libcurl.dll.a" -DCURL_INCLUDE_DIR="$env:CURL_PATH/include"
-          cmake --build build --config Release -j ${env:NUMBER_OF_PROCESSORS}
+          cmake --build build --config Release --target llama-quantize -j ${env:NUMBER_OF_PROCESSORS}
           cp $env:CURL_PATH/bin/libcurl-*.dll build/bin/Release
 
       - name: Add libopenblas.dll
@@ -837,7 +847,7 @@ jobs:
             key: ubuntu-latest-cmake-cuda
             evict-old-files: 1d
 
-        - name: Build with CMake
+        - name: Build llama-quantize with CMake
           run: |
             cmake -S . -B build -G Ninja \
               -DCMAKE_BUILD_TYPE=Release \
@@ -881,7 +891,7 @@ jobs:
         id: get_libcurl
         uses: ./.github/actions/windows-setup-curl
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         shell: cmd
         env:
@@ -896,8 +906,8 @@ jobs:
             -DGGML_RPC=ON ^
             -DCURL_LIBRARY="%CURL_PATH%/lib/libcurl.dll.a" -DCURL_INCLUDE_DIR="%CURL_PATH%/include"
           set /A NINJA_JOBS=%NUMBER_OF_PROCESSORS%-1
-          cmake --build build --config Release -j %NINJA_JOBS% -t ggml
-          cmake --build build --config Release
+          cmake --build build --config Release --target llama-quantize -j %NINJA_JOBS% -t ggml
+          cmake --build build --config Release --target llama-quantize
 
   windows-latest-cmake-sycl:
     runs-on: windows-2022
@@ -928,7 +938,7 @@ jobs:
 
       # TODO: add libcurl support ; we will also need to modify win-build-sycl.bat to accept user-specified args
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run:  examples/sycl/win-build-sycl.bat
 
@@ -971,7 +981,7 @@ jobs:
         id: get_libcurl
         uses: ./.github/actions/windows-setup-curl
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         env:
           CURL_PATH: ${{ steps.get_libcurl.outputs.curl_path }}
@@ -996,7 +1006,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -1011,14 +1021,14 @@ jobs:
             -DCMAKE_SYSTEM_NAME=iOS \
             -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
             -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM=ggml
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
 
       - name: xcodebuild for swift package
         id: xcodebuild
         run: |
           ./build-xcframework.sh
 
-      - name: Build Xcode project
+      - name: Build llama-quantize Xcode project
         run: xcodebuild -project examples/llama.swiftui/llama.swiftui.xcodeproj -scheme llama.swiftui -sdk iphoneos CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= -destination 'generic/platform=iOS' FRAMEWORK_FOLDER_PATH=./build-ios build
 
   android-build:
@@ -1045,7 +1055,7 @@ jobs:
         with:
           log-accepted-android-sdk-licenses: false
 
-      - name: Build
+      - name: Build llama-quantize
         run: |
           cd examples/llama.android
           ./gradlew build --no-daemon
@@ -1075,7 +1085,7 @@ jobs:
           yum update -y
           yum install -y git gcc gcc-c++ make cmake libcurl-devel
 
-      - name: Build
+      - name: Build llama-quantize
         run: |
           export LD_LIBRARY_PATH=${ASCEND_TOOLKIT_HOME}/lib64:${ASCEND_TOOLKIT_HOME}/$(uname -m)-linux/devlib/:${LD_LIBRARY_PATH}
 

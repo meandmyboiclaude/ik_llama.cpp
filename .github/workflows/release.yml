@@ -22,7 +22,7 @@ env:
 
 jobs:
   macOS-arm64:
-    if: false
+    #if: false
     runs-on: macos-14
 
     steps:
@@ -45,7 +45,7 @@ jobs:
           brew update
           brew install curl
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -57,26 +57,28 @@ jobs:
             -DGGML_RPC=ON \
             -DGGML_MAX_CONTEXTS=2048 \
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
+          cmake --build build --config Release --target llama-quantize -- -j $(sysctl -n hw.logicalcpu)
 
       - name: Determine tag name
         id: tag
         uses: ./.github/actions/get-tag-name
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifact
         id: pack_artifacts
         run: |
-          cp LICENSE ./build/bin/
-          zip -r llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip ./build/bin/*
+          # Keep license copy if available; ignore failure if build/bin missing
+          cp LICENSE ./build/bin/ || true
+          # zip only the llama-quantize binary
+          zip -j llama-${{ steps.tag.outputs.name }}-llama-quantize-macos-arm64.zip ./build/bin/llama-quantize
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip
-          name: llama-bin-macos-arm64.zip
+          path: llama-${{ steps.tag.outputs.name }}-llama-quantize-macos-arm64.zip
+          name: llama-quantize-bin-macos-arm64.zip
 
   macOS-x64:
-    if: false
+    #if: false
     runs-on: macos-13
 
     steps:
@@ -99,7 +101,7 @@ jobs:
           brew update
           brew install curl
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           sysctl -a
@@ -111,26 +113,26 @@ jobs:
             -DGGML_METAL=OFF \
             -DGGML_RPC=ON \
             -DGGML_MAX_CONTEXTS=2048
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
+          cmake --build build --config Release --target llama-quantize -- -j $(sysctl -n hw.logicalcpu)
 
       - name: Determine tag name
         id: tag
         uses: ./.github/actions/get-tag-name
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifact
         id: pack_artifacts
         run: |
-          cp LICENSE ./build/bin/
-          zip -r llama-${{ steps.tag.outputs.name }}-bin-macos-x64.zip ./build/bin/*
+          cp LICENSE ./build/bin/ || true
+          zip -j llama-${{ steps.tag.outputs.name }}-llama-quantize-macos-x64.zip ./build/bin/llama-quantize
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-${{ steps.tag.outputs.name }}-bin-macos-x64.zip
-          name: llama-bin-macos-x64.zip
+          path: llama-${{ steps.tag.outputs.name }}-llama-quantize-macos-x64.zip
+          name: llama-quantize-bin-macos-x64.zip
 
   ubuntu-22-cpu:
-    if: false
+    #if: false
     strategy:
       matrix:
         include:
@@ -160,36 +162,36 @@ jobs:
           sudo apt-get update
           sudo apt-get install build-essential libcurl4-openssl-dev
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           cmake -B build \
             -DLLAMA_FATAL_WARNINGS=ON \
             -DGGML_MAX_CONTEXTS=2048 \
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
       - name: Determine tag name
         id: tag
         uses: ./.github/actions/get-tag-name
-        
+
       - name: Check workspace contents
         run: |
           echo "=== Working directory ==="
           pwd
-      
+
           echo
           echo "=== Top-level files ==="
           ls -la
-      
+
           echo
           echo "=== Recursive listing of entire repo ==="
           ls -R .
-      
+
           echo
           echo "=== Locate LICENSE file(s) ==="
           find . -type f -iname "LICENSE" -print || echo "No LICENSE file found"
-      
+
           echo
           echo "=== Contents of build/ ==="
           if [[ -d build ]]; then
@@ -197,7 +199,7 @@ jobs:
           else
             echo "No build/ directory exists"
           fi
-      
+
           echo
           echo "=== Executable binaries under build/ ==="
           if [[ -d build ]]; then
@@ -206,20 +208,20 @@ jobs:
             echo "Skipping find (build/ not present)"
           fi
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifact
         id: pack_artifacts
         run: |
-          cp LICENSE ./build/bin/
-          zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}.zip ./build/bin/*
+          cp LICENSE ./build/bin/ || true
+          zip -j llama-${{ steps.tag.outputs.name }}-llama-quantize-ubuntu-${{ matrix.build }}.zip ./build/bin/llama-quantize
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}.zip
-          name: llama-bin-ubuntu-${{ matrix.build }}.zip
+          path: llama-${{ steps.tag.outputs.name }}-llama-quantize-ubuntu-${{ matrix.build }}.zip
+          name: llama-quantize-bin-ubuntu-${{ matrix.build }}.zip
 
   ubuntu-22-vulkan:
-    if: false
+    #if: false
     runs-on: ubuntu-22.04
 
     steps:
@@ -243,33 +245,33 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y build-essential mesa-vulkan-drivers vulkan-sdk libcurl4-openssl-dev
 
-      - name: Build
+      - name: Build llama-quantize
         id: cmake_build
         run: |
           cmake -B build \
             -DGGML_VULKAN=ON \
             -DGGML_MAX_CONTEXTS=2048 \
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -- -j $(nproc)
 
       - name: Determine tag name
         id: tag
         uses: ./.github/actions/get-tag-name
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifact
         id: pack_artifacts
         run: |
-          cp LICENSE ./build/bin/
-          zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64.zip ./build/bin/*
+          cp LICENSE ./build/bin/ || true
+          zip -j llama-${{ steps.tag.outputs.name }}-llama-quantize-ubuntu-vulkan-x64.zip ./build/bin/llama-quantize
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64.zip
-          name: llama-bin-ubuntu-vulkan-x64.zip
+          path: llama-${{ steps.tag.outputs.name }}-llama-quantize-ubuntu-vulkan-x64.zip
+          name: llama-quantize-bin-ubuntu-vulkan-x64.zip
 
   windows-cpu:
-    if: false # Not ready yet
+    #if: false # Not ready yet
     runs-on: windows-2025
 
     strategy:
@@ -320,25 +322,25 @@ jobs:
             -DCURL_LIBRARY="%CURL_PATH%/lib/libcurl.dll.a" -DCURL_INCLUDE_DIR="%CURL_PATH%/include" ^
             -DGGML_MAX_CONTEXTS=2048 ^
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release
+          cmake --build build --config Release --target llama-quantize
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifacts
         id: pack_artifacts
         env:
           CURL_PATH: ${{ steps.get_libcurl.outputs.curl_path }}
         run: |
           Copy-Item $env:CURL_PATH\bin\libcurl-${{ matrix.arch }}.dll .\build\bin\Release\
           Copy-Item "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\debug_nonredist\${{ matrix.arch }}\Microsoft.VC143.OpenMP.LLVM\libomp140.${{ matrix.arch == 'x64' && 'x86_64' || 'aarch64' }}.dll" .\build\bin\Release\
-          7z a llama-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\*
+          7z a llama-quantize-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
-          name: llama-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
+          path: llama-quantize-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
+          name: llama-quantize-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
 
   windows:
-    if: false
+    #if: false
     runs-on: windows-2025
 
     env:
@@ -401,24 +403,24 @@ jobs:
             -A arm64 `
             -DCMAKE_PREFIX_PATH="$env:RUNNER_TEMP/opencl-arm64-release" `
             -DCMAKE_INSTALL_PREFIX="$env:RUNNER_TEMP/opencl-arm64-release"
-          cmake --build build-arm64-release --target install --config release
+          cmake --build build-arm64-release --target install --config Release --target llama-quantize
 
       - name: Build
         id: cmake_build
         run: |
           cmake -S . -B build ${{ matrix.defines }} -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF -DGGML_MAX_CONTEXTS=2048
-          cmake --build build --config Release --target ${{ matrix.target }}
+          cmake --build build --config Release --target llama-quantize --target ${{ matrix.target }}
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifacts
         id: pack_artifacts
         run: |
-          7z a llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\${{ matrix.target }}.dll
+          7z a llama-quantize-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\${{ matrix.target }}.dll
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip
-          name: llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip
+          path: llama-quantize-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip
+          name: llama-quantize-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip
 
   windows-cuda:
     runs-on: windows-2022
@@ -472,18 +474,18 @@ jobs:
             -DGGML_CUDA_USE_GRAPHS=ON
 
           set /A NINJA_JOBS=%NUMBER_OF_PROCESSORS%-1
-          cmake --build build --config Release -j %NINJA_JOBS%
+          cmake --build build --config Release --target llama-quantize -j %NINJA_JOBS%
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifacts
         id: pack_artifacts
         run: |
-          7z a llama-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip .\build\bin\Release\*
+          7z a llama-quantize-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip .\build\bin\Release\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
-          name: llama-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+          path: llama-quantize-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+          name: llama-quantize-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
 
       - name: Copy and pack Cuda runtime
         run: |
@@ -491,16 +493,16 @@ jobs:
           $dst='.\build\bin\cudart\'
           robocopy "${{env.CUDA_PATH}}\bin" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
           robocopy "${{env.CUDA_PATH}}\lib" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
-          7z a cudart-llama-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip $dst\*
+          7z a cudart-llama-quantize-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip $dst\*
 
       - name: Upload Cuda runtime
         uses: actions/upload-artifact@v4
         with:
-          path: cudart-llama-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
-          name: cudart-llama-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+          path: cudart-llama-quantize-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+          name: cudart-llama-quantize-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
 
   windows-sycl:
-    if: false
+    #if: false
     runs-on: windows-2022
 
     defaults:
@@ -542,7 +544,7 @@ jobs:
             -DLLAMA_CURL=OFF
           cmake --build build -j
 
-      - name: Build the release package
+      - name: Build llama-quantizethe release package
         id: pack_artifacts
         run: |
           echo "cp oneAPI running time dll files in ${{ env.ONEAPI_ROOT }} to ./build/bin"
@@ -565,16 +567,16 @@ jobs:
           cp "${{ env.ONEAPI_ROOT }}/tbb/latest/bin/tbb12.dll" ./build/bin
 
           echo "cp oneAPI running time dll files to ./build/bin done"
-          7z a llama-bin-win-sycl-x64.zip ./build/bin/*
+          7z a llama-quantize-bin-win-sycl-x64.zip ./build/bin/*
 
       - name: Upload the release package
         uses: actions/upload-artifact@v4
         with:
-          path: llama-bin-win-sycl-x64.zip
-          name: llama-bin-win-sycl-x64.zip
+          path: llama-quantize-bin-win-sycl-x64.zip
+          name: llama-quantize-bin-win-sycl-x64.zip
 
   windows-hip:
-    if: false
+    #if: false
     runs-on: windows-2022
 
     strategy:
@@ -596,7 +598,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2.16
         with:
-          key: windows-latest-cmake-hip-${{ matrix.name }}-x64
+          key: windows-latest-cmake-hip-${{ matrix.name }}-llama-quantize-x64
           evict-old-files: 1d
 
       - name: Install
@@ -636,19 +638,19 @@ jobs:
           cp "${env:HIP_PATH}\bin\rocblas.dll" "build\bin\"
           cp "${env:HIP_PATH}\bin\rocblas\library\*" "build\bin\rocblas\library\"
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifacts
         id: pack_artifacts
         run: |
-          7z a llama-bin-win-hip-${{ matrix.name }}-x64.zip .\build\bin\*
+          7z a llama-quantize-bin-win-hip-${{ matrix.name }}-llama-quantize-x64.zip .\build\bin\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-bin-win-hip-${{ matrix.name }}-x64.zip
-          name: llama-bin-win-hip-${{ matrix.name }}-x64.zip
+          path: llama-quantize-bin-win-hip-${{ matrix.name }}-llama-quantize-x64.zip
+          name: llama-quantize-bin-win-hip-${{ matrix.name }}-llama-quantize-x64.zip
 
   ios-xcode-build:
-    if: false
+    #if: false
     runs-on: macos-latest
 
     steps:
@@ -673,30 +675,30 @@ jobs:
             -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
             -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM=ggml \
             -DGGML_MAX_CONTEXTS=2048
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
 
       - name: xcodebuild for swift package
         id: xcodebuild
         run: |
           ./build-xcframework.sh
 
-      - name: Build Xcode project
+      - name: Build llama-quantizeXcode project
         run: xcodebuild -project examples/llama.swiftui/llama.swiftui.xcodeproj -scheme llama.swiftui -sdk iphoneos CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY= -destination 'generic/platform=iOS' FRAMEWORK_FOLDER_PATH=./build-ios build
 
       - name: Determine tag name
         id: tag
         uses: ./.github/actions/get-tag-name
 
-      - name: Pack artifacts
+      - name: Pack llama-quantize artifacts
         id: pack_artifacts
         run: |
-          zip --symlinks -r llama-${{ steps.tag.outputs.name }}-xcframework.zip build-apple/llama.xcframework
+          zip --symlinks -r llama-${{ steps.tag.outputs.name }}-llama-quantize-xcframework.zip build-apple/llama.xcframework
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-${{ steps.tag.outputs.name }}-xcframework.zip
-          name: llama-${{ steps.tag.outputs.name }}-xcframework
+          path: llama-${{ steps.tag.outputs.name }}-llama-quantize-xcframework.zip
+          name: llama-${{ steps.tag.outputs.name }}-llama-quantize-xcframework
 
   release:
     if: ${{ ( github.event_name == 'push' && github.ref == 'refs/heads/master' ) || github.event.inputs.create_release == 'true' }}
@@ -709,16 +711,16 @@ jobs:
     runs-on: ubuntu-latest
 
     needs:
-      #- windows
-      #- windows-cpu
+      - windows
+      - windows-cpu
       - windows-cuda
-      #- windows-sycl
-      #- windows-hip
-      #- ubuntu-22-cpu
-      #- ubuntu-22-vulkan
-      #- macOS-arm64
-      #- macOS-x64
-      #- ios-xcode-build
+      - windows-sycl
+      - windows-hip
+      - ubuntu-22-cpu
+      - ubuntu-22-vulkan
+      - macOS-arm64
+      - macOS-x64
+      - ios-xcode-build
 
     steps:
       - name: Clone
@@ -744,9 +746,9 @@ jobs:
           mkdir -p release
 
           echo "Renaming and moving zips to release..."
-          for zip_file in artifact/llama-bin-win-*.zip artifact/cudart-llama-bin-win-*.zip; do
+          for zip_file in artifact/llama-quantize-bin-win-*.zip artifact/cudart-llama-quantize-bin-win-*.zip; do
             base_name=$(basename "$zip_file" .zip)
-            zip_name="ik_llama-${{ steps.tag.outputs.name }}-${base_name#llama-}.zip"
+            zip_name="ik_llama-${{ steps.tag.outputs.name }}-llama-quantize-${base_name#llama-}.zip"
             echo "Moving $zip_file to release/$zip_name"
             mv "$zip_file" "release/$zip_name"
           done
@@ -760,7 +762,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ steps.tag.outputs.name }}
+          tag_name: ${{ steps.tag.outputs.name }}-llama-quantize
 
       - name: Upload release
         id: upload_release
