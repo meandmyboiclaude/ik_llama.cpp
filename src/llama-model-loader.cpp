@@ -871,7 +871,7 @@ void llama_model_loader::load_data_for(struct ggml_tensor * cur, const size_t _i
         }
     } else {
         GGML_ASSERT(cur->data != nullptr);
-        GGML_ASSERT(w.idx < files.size());
+        GGML_ASSERT(_idx < files.size());
         const auto & file = files.at(_idx);
         file->seek(w.offs, SEEK_SET);
         file->read_raw(cur->data, ggml_nbytes(cur));
