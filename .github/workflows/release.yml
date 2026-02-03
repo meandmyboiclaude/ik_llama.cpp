@@ -18,11 +18,11 @@ concurrency:
 
 env:
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
-  CMAKE_ARGS: "-DLLAMA_BUILD_EXAMPLES=OFF -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_TOOLS=ON -DLLAMA_BUILD_SERVER=ON -DGGML_RPC=ON"
+  CMAKE_ARGS: "-DLLAMA_BUILD_EXAMPLES=ON -DLLAMA_BUILD_TESTS=OFF -DLLAMA_BUILD_TOOLS=ON -DLLAMA_BUILD_SERVER=ON -DGGML_RPC=OFF -DBUILD_SHARED_LIBS=OFF"
 
 jobs:
   macOS-arm64:
-    if: false
+    #if: false
     runs-on: macos-14
 
     steps:
@@ -51,13 +51,13 @@ jobs:
           sysctl -a
           cmake -B build \
             -DCMAKE_BUILD_RPATH="@loader_path" \
-            -DLLAMA_FATAL_WARNINGS=ON \
+            -DLLAMA_FATAL_WARNINGS=OFF \
             -DGGML_METAL_USE_BF16=ON \
             -DGGML_METAL_EMBED_LIBRARY=ON \
-            -DGGML_RPC=ON \
+            -DGGML_RPC=OFF \
             -DGGML_MAX_CONTEXTS=2048 \
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu)
 
       - name: Determine tag name
         id: tag
@@ -76,9 +76,9 @@ jobs:
           name: llama-bin-macos-arm64.zip
 
   macOS-x64:
-    if: false
-    runs-on: macos-13
-
+    #if: false
+    runs-on: macos-15-intel
+    
     steps:
       - name: Clone
         id: checkout
@@ -107,11 +107,13 @@ jobs:
           # https://github.com/ggml-org/llama.cpp/actions/runs/8635935781/job/23674807267#step:5:2313
           cmake -B build \
             -DCMAKE_BUILD_RPATH="@loader_path" \
-            -DLLAMA_FATAL_WARNINGS=ON \
-            -DGGML_METAL=OFF \
-            -DGGML_RPC=ON \
-            -DGGML_MAX_CONTEXTS=2048
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu)
+            -DLLAMA_FATAL_WARNINGS=OFF \
+            -DGGML_METAL_USE_BF16=ON \
+            -DGGML_METAL_EMBED_LIBRARY=ON \
+            -DGGML_RPC=OFF \
+            -DGGML_MAX_CONTEXTS=2048 \
+            ${{ env.CMAKE_ARGS }}
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu)
 
       - name: Determine tag name
         id: tag
@@ -130,15 +132,15 @@ jobs:
           name: llama-bin-macos-x64.zip
 
   ubuntu-22-cpu:
-    if: false
+    #if: false
     strategy:
       matrix:
         include:
           - build: 'x64'
             os: ubuntu-22.04
-          - build: 'arm64'
-            os: ubuntu-22.04-arm
-
+          #- build: 'arm64'
+          #  os: ubuntu-22.04-arm
+        
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -164,10 +166,10 @@ jobs:
         id: cmake_build
         run: |
           cmake -B build \
-            -DLLAMA_FATAL_WARNINGS=ON \
+            -DLLAMA_FATAL_WARNINGS=OFF \
             -DGGML_MAX_CONTEXTS=2048 \
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -j $(nproc)
 
       - name: Determine tag name
         id: tag
@@ -209,6 +211,9 @@ jobs:
       - name: Pack artifacts
         id: pack_artifacts
         run: |
+          ls -l ./build
+          ls -l ./build/bin/
+          find /home/runner/work/ik_llama.cpp/ik_llama.cpp/build
           cp LICENSE ./build/bin/
           zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}.zip ./build/bin/*
 
@@ -250,7 +255,7 @@ jobs:
             -DGGML_VULKAN=ON \
             -DGGML_MAX_CONTEXTS=2048 \
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release -j $(nproc)
+          cmake --build build --config Release --target llama-quantize -j $(nproc)
 
       - name: Determine tag name
         id: tag
@@ -269,13 +274,12 @@ jobs:
           name: llama-bin-ubuntu-vulkan-x64.zip
 
   windows-cpu:
-    if: false # Not ready yet
-    runs-on: windows-2025
+    #if: false # Not ready yet
+    runs-on: windows-2022
 
     strategy:
       matrix:
         arch: ['x64'] #, 'arm64'
-        instr: ['noavx', 'avx', 'avx2', 'avx512', 'avx512_vnni', 'avx512_vnni_bf16', 'avx512_vnni_vbmi', 'avx512_vnni_vbmi_bf16']
 
     steps:
       - name: Clone
@@ -286,7 +290,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2.16
         with:
-          key: windows-latest-cmake-cpu-${{ matrix.arch }}-${{ matrix.instr }}
+          key: windows-latest-cmake-cpu-${{ matrix.arch }}
           variant: ccache
           evict-old-files: 1d
 
@@ -294,48 +298,31 @@ jobs:
         run: |
           choco install ninja
 
-      - name: libCURL
-        id: get_libcurl
-        uses: ./.github/actions/windows-setup-curl
-        with:
-          architecture: ${{ matrix.arch == 'x64' && 'win64' || 'win64a' }}
-
       - name: Build
         shell: cmd
-        env:
-          CURL_PATH: ${{ steps.get_libcurl.outputs.curl_path }}
         run: |
           call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch == 'x64' && 'x64' || 'amd64_arm64' }}
           cmake -S . -B build -G "Ninja Multi-Config" ^
-            -D CMAKE_TOOLCHAIN_FILE=cmake/${{ matrix.arch }}-windows-llvm.cmake ^
+            -DLLAMA_FATAL_WARNINGS=OFF ^
             -DGGML_NATIVE=OFF ^
             -DGGML_CPU_ALL_VARIANTS=${{ matrix.arch == 'x64' && 'ON' || 'OFF' }} ^
             -DGGML_OPENMP=ON ^
-            -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} ^
-            -DGGML_AVX2=${{ (matrix.instr == 'avx2' || matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
-            -DGGML_AVX512=${{ (matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
-            -DGGML_AVX512_VNNI=${{ (matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
-            -DGGML_AVX512_VBMI=${{ (matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
-            -DGGML_AVX512_BF16=${{ (matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
             -DCURL_LIBRARY="%CURL_PATH%/lib/libcurl.dll.a" -DCURL_INCLUDE_DIR="%CURL_PATH%/include" ^
             -DGGML_MAX_CONTEXTS=2048 ^
+            -DLLAMA_CURL=OFF ^
             ${{ env.CMAKE_ARGS }}
-          cmake --build build --config Release
+          cmake --build build --config Release --target llama-quantize
 
       - name: Pack artifacts
         id: pack_artifacts
-        env:
-          CURL_PATH: ${{ steps.get_libcurl.outputs.curl_path }}
         run: |
-          Copy-Item $env:CURL_PATH\bin\libcurl-${{ matrix.arch }}.dll .\build\bin\Release\
-          Copy-Item "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Redist\MSVC\14.44.35112\debug_nonredist\${{ matrix.arch }}\Microsoft.VC143.OpenMP.LLVM\libomp140.${{ matrix.arch == 'x64' && 'x86_64' || 'aarch64' }}.dll" .\build\bin\Release\
-          7z a llama-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\*
+          7z a llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}.zip .\build\bin\Release\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
-          name: llama-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
+          path: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}.zip
+          name: llama-bin-win-cpu-${{ matrix.arch }}.zip
 
   windows:
     if: false
@@ -401,26 +388,27 @@ jobs:
             -A arm64 `
             -DCMAKE_PREFIX_PATH="$env:RUNNER_TEMP/opencl-arm64-release" `
             -DCMAKE_INSTALL_PREFIX="$env:RUNNER_TEMP/opencl-arm64-release"
-          cmake --build build-arm64-release --target install --config release
+          cmake --build build-arm64-release --target install --config Release
 
       - name: Build
         id: cmake_build
         run: |
           cmake -S . -B build ${{ matrix.defines }} -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF -DGGML_MAX_CONTEXTS=2048
-          cmake --build build --config Release --target ${{ matrix.target }}
+          cmake --build build --config Release --target llama-quantize --target ${{ matrix.target }}
 
       - name: Pack artifacts
         id: pack_artifacts
         run: |
-          7z a llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\${{ matrix.target }}.dll
+          7z a llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip .\build\bin\Release\*${{ matrix.target }}.dll
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip
-          name: llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}-${{ matrix.instr }}.zip
+          path: llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip
+          name: llama-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip
 
   windows-cuda:
+    if: false
     runs-on: windows-2022
 
     strategy:
@@ -472,7 +460,7 @@ jobs:
             -DGGML_CUDA_USE_GRAPHS=ON
 
           set /A NINJA_JOBS=%NUMBER_OF_PROCESSORS%-1
-          cmake --build build --config Release -j %NINJA_JOBS%
+          cmake --build build --config Release --target llama-quantize -j %NINJA_JOBS%
 
       - name: Pack artifacts
         id: pack_artifacts
@@ -536,7 +524,7 @@ jobs:
           cmake -G "Ninja" -B build ^
             -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=icx ^
             -DCMAKE_BUILD_TYPE=Release ^
-            -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=ON ^
+            -DGGML_BACKEND_DL=ON -DBUILD_SHARED_LIBS=OFF ^
             -DGGML_SYCL=ON ^
             -DGGML_MAX_CONTEXTS=2048 ^
             -DLLAMA_CURL=OFF
@@ -665,7 +653,7 @@ jobs:
             -DGGML_METAL_USE_BF16=ON \
             -DGGML_METAL_EMBED_LIBRARY=ON \
             -DLLAMA_CURL=OFF \
-            -DLLAMA_BUILD_EXAMPLES=OFF \
+            -DLLAMA_BUILD_EXAMPLES=ON \
             -DLLAMA_BUILD_TOOLS=OFF \
             -DLLAMA_BUILD_TESTS=OFF \
             -DLLAMA_BUILD_SERVER=OFF \
@@ -673,7 +661,7 @@ jobs:
             -DCMAKE_OSX_DEPLOYMENT_TARGET=14.0 \
             -DCMAKE_XCODE_ATTRIBUTE_DEVELOPMENT_TEAM=ggml \
             -DGGML_MAX_CONTEXTS=2048
-          cmake --build build --config Release -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
+          cmake --build build --config Release --target llama-quantize -j $(sysctl -n hw.logicalcpu) -- CODE_SIGNING_ALLOWED=NO
 
       - name: xcodebuild for swift package
         id: xcodebuild
@@ -710,14 +698,14 @@ jobs:
 
     needs:
       #- windows
-      #- windows-cpu
-      - windows-cuda
+      - windows-cpu
+      #- windows-cuda
       #- windows-sycl
       #- windows-hip
-      #- ubuntu-22-cpu
+      - ubuntu-22-cpu
       #- ubuntu-22-vulkan
-      #- macOS-arm64
-      #- macOS-x64
+      - macOS-arm64
+      - macOS-x64
       #- ios-xcode-build
 
     steps:
@@ -744,9 +732,9 @@ jobs:
           mkdir -p release
 
           echo "Renaming and moving zips to release..."
-          for zip_file in artifact/llama-bin-win-*.zip artifact/cudart-llama-bin-win-*.zip; do
+          for zip_file in artifact/llama-*.zip; do
             base_name=$(basename "$zip_file" .zip)
-            zip_name="ik_llama-${{ steps.tag.outputs.name }}-${base_name#llama-}.zip"
+            zip_name="ik_llama-${base_name#llama-th-}.zip"
             echo "Moving $zip_file to release/$zip_name"
             mv "$zip_file" "release/$zip_name"
           done

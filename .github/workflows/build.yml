@@ -769,7 +769,7 @@ jobs:
             -A arm64 `
             -DCMAKE_PREFIX_PATH="$env:RUNNER_TEMP/opencl-arm64-release" `
             -DCMAKE_INSTALL_PREFIX="$env:RUNNER_TEMP/opencl-arm64-release"
-          cmake --build build-arm64-release --target install --config release
+          cmake --build build-arm64-release --target install --config Release
 
       - name: libCURL
         id: get_libcurl
