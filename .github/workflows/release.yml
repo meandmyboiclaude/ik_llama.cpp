@@ -211,9 +211,6 @@ jobs:
       - name: Pack artifacts
         id: pack_artifacts
         run: |
-          ls -l ./build
-          ls -l ./build/bin/
-          find /home/runner/work/ik_llama.cpp/ik_llama.cpp/build
           cp LICENSE ./build/bin/
           zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}.zip ./build/bin/*
 
