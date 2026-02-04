@@ -313,6 +313,10 @@ jobs:
             ${{ env.CMAKE_ARGS }}
           cmake --build build --config Release --target llama-quantize
 
+      - name: Determine tag name
+        id: tag
+        uses: ./.github/actions/get-tag-name
+
       - name: Pack artifacts
         id: pack_artifacts
         run: |
@@ -396,6 +400,10 @@ jobs:
           cmake -S . -B build ${{ matrix.defines }} -DGGML_NATIVE=OFF -DLLAMA_CURL=OFF -DGGML_MAX_CONTEXTS=2048
           cmake --build build --config Release --target llama-quantize --target ${{ matrix.target }}
 
+      - name: Determine tag name
+        id: tag
+        uses: ./.github/actions/get-tag-name
+
       - name: Pack artifacts
         id: pack_artifacts
         run: |
@@ -461,6 +469,10 @@ jobs:
 
           set /A NINJA_JOBS=%NUMBER_OF_PROCESSORS%-1
           cmake --build build --config Release --target llama-quantize -j %NINJA_JOBS%
+
+      - name: Determine tag name
+        id: tag
+        uses: ./.github/actions/get-tag-name
 
       - name: Pack artifacts
         id: pack_artifacts
@@ -529,6 +541,10 @@ jobs:
             -DGGML_MAX_CONTEXTS=2048 ^
             -DLLAMA_CURL=OFF
           cmake --build build -j
+
+      - name: Determine tag name
+        id: tag
+        uses: ./.github/actions/get-tag-name
 
       - name: Build the release package
         id: pack_artifacts
@@ -735,7 +751,6 @@ jobs:
           for zip_file in artifact/llama-*.zip; do
             base_name=$(basename "$zip_file" .zip)
             zip_name="ik_llama-${base_name#llama-th-}.zip"
-            zip_name="ik_llama-${base_name#llama--}.zip"
             echo "Moving $zip_file to release/$zip_name"
             mv "$zip_file" "release/$zip_name"
           done
