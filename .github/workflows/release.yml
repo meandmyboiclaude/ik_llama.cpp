@@ -763,7 +763,7 @@ jobs:
         with:
           tag_name: ${{ steps.tag.outputs.name }}
           body: |
-            This is a special build of llama-quantize (ik_llama.cpp version) with the --split-max-tensors parameter which allows to choose which specific tensors of a model to quantize and ignore the rest.
+            This is a special build of llama-quantize (ik_llama.cpp version) with the --individual-tensors parameter which allows to choose which specific tensors of a model to quantize and ignore the rest.
             This special version of llama-quantize is used in Thireus' (GGUF-Tool-Suite)[https://github.com/Thireus/GGUF-Tool-Suite] to quantize individual tensors from their BF16 version.
 
             If you are looking for other llama-* tools, download from the main-* tagged releases instead: https://github.com/Thireus/ik_llama.cpp/tags
