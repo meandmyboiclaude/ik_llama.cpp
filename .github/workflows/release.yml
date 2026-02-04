@@ -762,6 +762,30 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ steps.tag.outputs.name }}
+          body: |
+            This is a special build of llama-quantize (ik_llama.cpp version) with the --split-max-tensors parameter which allows to choose which specific tensors of a model to quantize and ignore the rest.
+            This special version of llama-quantize is used in Thireus' (GGUF-Tool-Suite)[https://github.com/Thireus/GGUF-Tool-Suite] to quantize individual tensors from their BF16 version.
+
+            If you are looking for other llama-* tools, download from the main-* tagged releases instead: https://github.com/Thireus/ik_llama.cpp/tags
+
+            <details open>
+
+            ${{ github.event.head_commit.message }}
+
+            </details>
+
+            **macOS:**
+            - [macOS Apple Silicon (arm64)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip)
+            - [macOS Intel (x64)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-x64.zip)
+
+            **Linux:**
+            - [Ubuntu x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64.zip)
+
+            **Windows:**
+            - [Windows x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x64.zip)
+
+            For more information about this version of llama-quantize: https://github.com/Thireus/GGUF-Tool-Suite/issues/45
+            For any issues please open a ticket on https://github.com/Thireus/GGUF-Tool-Suite/issues
 
       - name: Upload release
         id: upload_release
