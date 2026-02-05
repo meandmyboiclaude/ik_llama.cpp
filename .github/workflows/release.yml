@@ -812,7 +812,7 @@ jobs:
             - [macOS Intel (x64) AVX512 VNNI VBMI](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-x64-avx512_vnni_vbmi.zip)
             - [macOS Intel (x64) AVX512 VNNI VBMI BF16](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-x64-avx512_vnni_vbmi_bf16.zip)
 
-            **Linux:**
+            **Linux CPU-only:**
             - [Ubuntu x64 (CPU) AVX2](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx2.zip)
             - [Ubuntu x64 (CPU) AVX512](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx512.zip)
             - [Ubuntu x64 (CPU) AVX512 VNNI](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx512_vnni.zip)
