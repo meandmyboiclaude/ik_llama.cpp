@@ -775,14 +775,14 @@ jobs:
             </details>
 
             **macOS:**
-            - [macOS Apple Silicon (arm64)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip)
-            - [macOS Intel (x64)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-x64.zip)
+            - [llama-quantize for macOS Apple Silicon (arm64)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip)
+            - [llama-quantize for macOS Intel (x64)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-macos-x64.zip)
 
             **Linux:**
-            - [Ubuntu x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64.zip)
+            - [llama-quantize for Ubuntu x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64.zip)
 
             **Windows:**
-            - [Windows x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x64.zip)
+            - [llama-quantize for Windows x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x64.zip)
 
             For more information about this version of llama-quantize: https://github.com/Thireus/GGUF-Tool-Suite/issues/45
             For any issues please open a ticket on https://github.com/Thireus/GGUF-Tool-Suite/issues
