@@ -264,7 +264,7 @@ void ggml_abort(const char * file, int line, const char * fmt, ...) {
     abort();
 }
 
-#define GGML_DEBUG 0
+#define GGML_DEBUG 1
 #define GGML_GELU_FP16
 #define GGML_GELU_QUICK_FP16
 
@@ -27127,20 +27127,20 @@ size_t ggml_quantize_chunk(
            const float * imatrix) {
     const int64_t n = (int64_t) nrows * n_per_row;
 
-    if (ggml_quantize_requires_imatrix(type)) {
-        GGML_ASSERT(imatrix != NULL);
-    }
+    // if (ggml_quantize_requires_imatrix(type)) {
+    //     GGML_ASSERT(imatrix != NULL);
+    // }
 
     GGML_ASSERT(start % type_traits[type].blck_size == 0);
     GGML_ASSERT(start % n_per_row == 0);
-
-    ggml_quantize_init(type); // this is noop if already initialized
+//GGML_PRINT_DEBUG("Thireus02\n");
+    //ggml_quantize_init(type); // this is noop if already initialized
 
     const size_t start_row = start / n_per_row;
     const size_t row_size  = ggml_row_size(type, n_per_row);
 
     size_t result = 0;
-
+//GGML_PRINT_DEBUG("Thireus03\n");
     switch (type) {
         case GGML_TYPE_Q4_0:    result = quantize_q4_0(src + start, (char *) dst + start_row * row_size, nrows, n_per_row, imatrix); break;
         case GGML_TYPE_Q4_1:    result = quantize_q4_1(src + start, (char *) dst + start_row * row_size, nrows, n_per_row, imatrix); break;
@@ -27215,30 +27215,30 @@ size_t ggml_quantize_chunk(
         case GGML_TYPE_F16:
             {
                 size_t elemsize = sizeof(ggml_fp16_t);
-                ggml_fp32_to_fp16_row(src + start, (ggml_fp16_t *)dst + start, n);
+                // ggml_fp32_to_fp16_row(src + start, (ggml_fp16_t *)dst + start, n);
                 result = n * elemsize;
             } break;
         case GGML_TYPE_BF16:
             {
                 size_t elemsize = sizeof(ggml_bf16_t);
-                ggml_fp32_to_bf16_row_ref(src + start, (ggml_bf16_t *)dst + start, n);
+                // ggml_fp32_to_bf16_row_ref(src + start, (ggml_bf16_t *)dst + start, n);
                 result = n * elemsize;
             } break;
         case GGML_TYPE_BF16_R16:
             {
-                repack_f32_bf16_r16(src + start, (char *) dst + start_row * row_size, nrows, n_per_row);
+                // repack_f32_bf16_r16(src + start, (char *) dst + start_row * row_size, nrows, n_per_row);
                 result = nrows * row_size;
             } break;
         case GGML_TYPE_F32:
             {
                 size_t elemsize = sizeof(float);
                 result = n * elemsize;
-                memcpy((uint8_t *)dst + start * elemsize, src + start, result);
+                // memcpy((uint8_t *)dst + start * elemsize, src + start, result);
             } break;
         default:
             assert(false);
     }
-
+//GGML_PRINT_DEBUG("Thireus098\n");
     GGML_ASSERT(result == nrows * row_size);
 
     return result;

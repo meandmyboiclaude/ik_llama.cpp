@@ -808,6 +808,7 @@ static size_t llama_tensor_quantize_internal(enum ggml_type new_type, const floa
     if (nthread < 2) {
         // single-thread
         size_t new_size = ggml_quantize_chunk(new_type, f32_data, new_data, 0, nrows, n_per_row, imatrix);
+//        LLAMA_LOG_INFO("Thireus99\n");
         if (!ggml_validate_row_data(new_type, new_data, new_size)) {
             throw std::runtime_error("quantized data validation failed");
         }
@@ -1382,7 +1383,8 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             new_type = tensor->type;
             new_data = tensor->data;
             new_size = ggml_nbytes(tensor);
-            LLAMA_LOG_INFO("size = %8.3f MB\n", ggml_nbytes(tensor)/1024.0/1024.0);
+            //LLAMA_LOG_INFO("size = %8.3f MB\n", ggml_nbytes(tensor)/1024.0/1024.0);
+            LLAMA_LOG_INFO("\nbytes=%d\n", ggml_nbytes(tensor));
         } else {
             const int64_t nelements = ggml_nelements(tensor);
 
@@ -1489,10 +1491,12 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
                 const float * f32_data_03 = f32_data + i03 * nelements_matrix;
                 void * new_data_03 = (char *)new_data + ggml_row_size(new_type, n_per_row) * i03 * nrows;
                 const float * imatrix_03 = imatrix ? imatrix + i03 * n_per_row : nullptr;
-
+//LLAMA_LOG_INFO("Thireus01\n");
                 new_size += llama_tensor_quantize_internal(new_type, f32_data_03, new_data_03, chunk_size, nrows, n_per_row, imatrix_03, workers, nthread_use);
             }
-            LLAMA_LOG_INFO("size = %8.2f MiB -> %8.2f MiB\n", ggml_nbytes(tensor)/1024.0/1024.0, new_size/1024.0/1024.0);
+            //LLAMA_LOG_INFO("size = %d Bytes -> %d Bytes\n", ggml_nbytes(tensor), new_size);
+            LLAMA_LOG_INFO("\noldbytes=%d\n", ggml_nbytes(tensor));
+            LLAMA_LOG_INFO("\nbytes=%d\n", new_size);
         }
 
 QuantizationDone:;
