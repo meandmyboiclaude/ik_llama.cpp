@@ -339,13 +339,13 @@ jobs:
         id: pack_artifacts
         run: |
           cp LICENSE ./build/bin/
-          zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }-${{ matrix.instr }}.zip ./build/bin/*
+          zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }}-${{ matrix.instr }}.zip ./build/bin/*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }-${{ matrix.instr }}.zip
-          name: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }-${{ matrix.instr }}.zip
+          path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }}-${{ matrix.instr }}.zip
+          name: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }}-${{ matrix.instr }}.zip
 
   windows-cpu:
     if: false # Not ready yet
