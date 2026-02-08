@@ -389,6 +389,7 @@ jobs:
             -DCMAKE_INSTALL_RPATH='$ORIGIN' \
             -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
             -DGGML_NATIVE=OFF \
+            -DGGML_BACKEND_DL=ON \
             -DLLAMA_FATAL_WARNINGS=OFF \
             -DGGML_OPENMP=ON \
             -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} \
