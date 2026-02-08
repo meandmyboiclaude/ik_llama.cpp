@@ -285,7 +285,6 @@ jobs:
           cmake -B build \
             -DGGML_VULKAN=ON \
             -DLLAMA_FATAL_WARNINGS=OFF \
-            -DBUILD_SHARED_LIBS=OFF \
             -DGGML_OPENMP=ON \
             -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} \
             -DGGML_AVX2=${{ (matrix.instr == 'avx2' || matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} \
@@ -391,7 +390,6 @@ jobs:
             -DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
             -DGGML_NATIVE=OFF \
             -DLLAMA_FATAL_WARNINGS=OFF \
-            -DBUILD_SHARED_LIBS=OFF \
             -DGGML_OPENMP=ON \
             -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} \
             -DGGML_AVX2=${{ (matrix.instr == 'avx2' || matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} \
