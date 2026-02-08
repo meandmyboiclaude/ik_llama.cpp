@@ -456,13 +456,13 @@ jobs:
       - name: Copy and pack Cuda runtime
         run: |
           echo "Cuda install location: ${{ env.CUDA_PATH }}"
-          cp /usr/local/cuda-${{ matrix.cuda }}/lib64/libcublas.so.12 ./build/bin/
-          cp /usr/local/cuda-${{ matrix.cuda }}/lib64/libcublasLt.so.12 ./build/bin/
-          cp /usr/local/cuda-${{ matrix.cuda }}/lib64/libcudart.so.12 ./build/bin/
+          cp /usr/local/cuda-${{ matrix.cuda }}/lib64/libcublas.so.* ./build/bin/
+          cp /usr/local/cuda-${{ matrix.cuda }}/lib64/libcublasLt.so.* ./build/bin/
+          cp /usr/local/cuda-${{ matrix.cuda }}/lib64/libcudart.so.* ./build/bin/
           zip -r cudart-llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-${{ matrix.build }}-${{ matrix.instr }}.zip ./build/bin/*
-          rm ./build/bin/libcublas.so.12
-          rm ./build/bin/libcublasLt.so.12
-          rm ./build/bin/libcudart.so.12
+          rm ./build/bin/libcublas.so.*
+          rm ./build/bin/libcublasLt.so.*
+          rm ./build/bin/libcudart.so.*
 
       - name: Upload Cuda runtime
         uses: actions/upload-artifact@v4
