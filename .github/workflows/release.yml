@@ -293,6 +293,7 @@ jobs:
             -DGGML_BACKEND_DL=ON \
             -DGGML_NATIVE=OFF \
             -DLLAMA_FATAL_WARNINGS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
             -DGGML_OPENMP=ON \
             -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} \
             -DGGML_AVX2=${{ (matrix.instr == 'avx2' || matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} \
@@ -400,6 +401,7 @@ jobs:
             -DGGML_NATIVE=OFF \
             -DGGML_BACKEND_DL=ON \
             -DLLAMA_FATAL_WARNINGS=OFF \
+            -DBUILD_SHARED_LIBS=OFF \
             -DGGML_OPENMP=ON \
             -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} \
             -DGGML_AVX2=${{ (matrix.instr == 'avx2' || matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} \
