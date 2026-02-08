@@ -856,12 +856,12 @@ jobs:
             </details>
 
             **Linux Vulkan:**
-            - [Ubuntu x64 (Vulkan) AVX2](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx2.zip)
-            - [Ubuntu x64 (Vulkan) AVX512](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx512.zip)
-            - [Ubuntu x64 (Vulkan) AVX512 VNNI](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx512_vnni.zip)
-            - [Ubuntu x64 (Vulkan) AVX512 VNNI BF16](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx512_vnni_bf16.zip)
-            - [Ubuntu x64 (Vulkan) AVX512 VNNI VBMI](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx512_vnni_vbmi.zip)
-            - [Ubuntu x64 (Vulkan) AVX512 VNNI VBMI BF16](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64-avx512_vnni_vbmi_bf16.zip)
+            - [Ubuntu x64 (Vulkan) AVX2](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64-avx2.zip)
+            - [Ubuntu x64 (Vulkan) AVX512](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64-avx512.zip)
+            - [Ubuntu x64 (Vulkan) AVX512 VNNI](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64-avx512_vnni.zip)
+            - [Ubuntu x64 (Vulkan) AVX512 VNNI BF16](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64-avx512_vnni_bf16.zip)
+            - [Ubuntu x64 (Vulkan) AVX512 VNNI VBMI](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64-avx512_vnni_vbmi.zip)
+            - [Ubuntu x64 (Vulkan) AVX512 VNNI VBMI BF16](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-x64-avx512_vnni_vbmi_bf16.zip)
 
             For ref. about CPU capabilities (always choose AVX2 if your CPU isn't AVX512-capable): https://github.com/Thireus/GGUF-Tool-Suite/issues/47#issuecomment-3681021233
 
