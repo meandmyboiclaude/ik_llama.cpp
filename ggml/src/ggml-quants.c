@@ -14869,7 +14869,7 @@ static void quantize_row_iq4_nl_impl(const int super_block_size, const int block
 }
 
 size_t quantize_iq4_nl(const float * restrict src, void * restrict dst, int64_t nrow, int64_t n_per_row, const float * quant_weights) {
-    // GGML_ASSERT(n_per_row%QK4_NL == 0);
+    GGML_ASSERT(n_per_row%QK4_NL == 0);
     int64_t nblock = n_per_row/QK4_NL;
     // char * qrow = (char *)dst;
     // uint8_t L[QK4_NL];
@@ -14911,7 +14911,7 @@ void quantize_row_iq4_nl_ref(const float * restrict x, block_iq4_nl * restrict y
 }
 
 size_t quantize_iq4_xs(const float * restrict src, void * restrict dst, int64_t nrow, int64_t n_per_row, const float * quant_weights) {
-    // GGML_ASSERT(n_per_row%QK_K == 0);
+    GGML_ASSERT(n_per_row%QK_K == 0);
     int64_t nblock = n_per_row/QK_K;
     // char * qrow = (char *)dst;
     // uint8_t L[QK_K];
@@ -15112,7 +15112,7 @@ static void quantize_row_iq2_s_impl(const float * restrict x, void * restrict vy
 }
 
 size_t quantize_iq2_s(const float * restrict src, void * restrict dst, int64_t nrow, int64_t n_per_row, const float * quant_weights) {
-    // GGML_ASSERT(n_per_row%QK_K == 0);
+    GGML_ASSERT(n_per_row%QK_K == 0);
     int64_t nblock = n_per_row/QK_K;
     // char * qrow = (char *)dst;
     // for (int64_t row = 0; row < nrow; ++row) {
