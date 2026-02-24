@@ -267,6 +267,7 @@ struct llama_layer {
     llama_split_tensor split_ffn_up_shexp;
     llama_split_tensor split_ffn_gate_shexp;
     llama_split_tensor split_ffn_down_shexp;
+    llama_split_tensor split_ffn_gate_inp_shexp;
 
     llama_split_tensor split_ffn_gate_inp_b;
     llama_split_tensor split_ffn_gate_exps_b;
@@ -374,8 +375,11 @@ struct llama_model {
     int max_gpu = 0; // max. number of GPUs to use per layer for aplit mode "graph"
     int n_gpu_layers;
 
+    bool mtp; // use mtp if is supported by the Model
+
     std::vector<rpc_device> rpc_servers;
     std::vector<int32_t> devices;
+    std::vector<int32_t> default_layer_device;
 
     // gguf metadata
     std::unordered_map<std::string, std::string> gguf_kv;
@@ -420,8 +424,15 @@ struct llama_model {
 
     ~llama_model();
 
-    // Not actually needed, but left in place for now
-    size_t max_nodes() const { return 65536 * 2; }
+    size_t max_nodes(int n_tokens) const {
+        auto n_tensors = tensors_by_name.size();
+        if (split_mode == LLAMA_SPLIT_MODE_GRAPH && !devices.empty()) n_tensors *= devices.size();
+        if (arch == LLM_ARCH_QWEN3NEXT || arch == LLM_ARCH_QWEN35MOE) {
+            return std::max<size_t>(n_tokens * 40, 32u * n_tensors);
+        }
+        //return std::max<size_t>(1024, 8*n_tensors);
+        return 65536;
+    }
 
     bool has_tensor_overrides() const {
         return tensor_overrides;
@@ -507,3 +518,4 @@ struct LLM_TN {
 std::string llama_model_ftype_name(llama_ftype ftype);
 
 const char * llama_model_type_name(e_model type);
+
