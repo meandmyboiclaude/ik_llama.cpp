@@ -490,6 +490,7 @@ extern "C" {
         bool keep_split;                     // quantize to the same number of shards
         bool ignore_imatrix_rules;           // If set to true, the built-in rules for refusing to quantize into certain quants without imatrix are ignored
         bool only_repack;                    // Only repack tensors
+        bool dry_run;                        //
         void * imatrix;                      // pointer to importance matrix data
         void * kv_overrides;                 // pointer to vector containing overrides
         void * custom_quants;                // pointer to vector containing custom quantization rules
@@ -1389,7 +1390,7 @@ LLAMA_API struct llama_grammar* llama_sampler_init_grammar_lazy_patterns(
         const uint32_t seed);
 
     void llama_prep_adaptive_p(struct llama_context * ctx,
-                 llama_token_data_array * candidates,
+                                  float * logits,
         struct llama_sampler_adaptive_p * adapt_p_ctx);
 
     /// @details Adaptive p sampler described in https://github.com/MrJackSpade/adaptive-p-docs/blob/main/README.md
