@@ -1531,6 +1531,11 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         params.scheduler_async = true;
         return true;
     }
+    if (arg == "-fdn" || arg == "--fused-delta-net") {
+        CHECK_ARG
+        params.fused_delta_net = std::stoi(argv[i]);
+        return true;
+    }
     if (arg == "-smf16" || arg == "--split-mode-f16") {
         params.reduce_type = "f16";
         //params.split_mode_f16 = true;
@@ -2036,6 +2041,16 @@ bool gpt_params_find_arg(int argc, char ** argv, const std::string & arg, gpt_pa
         }
         return true;
     }
+    if (arg == "--ctx-checkpoints") {
+        CHECK_ARG
+        params.ctx_checkpoints_n = std::stoi(argv[i]);
+        return true;
+    }
+    if (arg == "--ctx-checkpoints-interval") {
+        CHECK_ARG
+        params.ctx_checkpoints_interval = std::stoi(argv[i]);
+        return true;
+    }
     if (arg == "-cram" || arg == "--cache-ram") {
         CHECK_ARG
         params.cache_ram_mib = std::stoi(argv[i]);
@@ -2230,7 +2245,10 @@ void gpt_params_print_usage(int /*argc*/, char ** argv, const gpt_params & param
 
     options.push_back({ "*",           "-c,    --ctx-size N",           "size of the prompt context (default: %d, 0 = loaded from model)", params.n_ctx });
     options.push_back({ "*",           "-cd,   --ctx-size-draft N",     "size of the prompt context for the draft model (default: %d, 0 = loaded from model)", params.speculative.n_ctx });
-    options.push_back({ "*",           "-cram, --cache-ram N",           "set the maximum cache size in MiB (default: %d, -1 - no limit, 0 - disable)",params.cache_ram_mib });
+
+    options.push_back({ "*",           "--ctx-checkpoints N",           "max number of context checkpoints to create per slot (default: %d)",params.ctx_checkpoints_n});
+    options.push_back({ "*",           "--ctx-checkpoints-interval N",  "minimum number of tokens between each context checkpoint.  (default: %d, <=0 disable)",params.ctx_checkpoints_interval});
+    options.push_back({ "*",           "-cram, --cache-ram N",          "set the maximum cache size in MiB (default: %d, -1 - no limit, 0 - disable)",params.cache_ram_mib });
     options.push_back({ "*",           "-crs,  --cache-ram-similarity N",           "max of similarity of prompt tokens to cache tokens that triggers prompt cache (default: %.2f).",params.cache_ram_similarity });
     options.push_back({ "*",           "-cram-n-min --cache-ram-n-min N",           "minimum number of the cached tokens that triggers prompt cache (default: %d).", params.cache_ram_n_min });
     options.push_back({ "*",           "-n,    --predict N",            "number of tokens to predict (default: %d, -1 = infinity, -2 = until context filled)", params.n_predict });
@@ -2258,6 +2276,7 @@ void gpt_params_print_usage(int /*argc*/, char ** argv, const gpt_params & param
     options.push_back({ "*",         "-grt, --graph-reduce-type",       "Type for data exchange between GPUs (default: %s)", "f32"});
     options.push_back({ "*",         "-smgs, --split-mode-graph-scheduling,", "Force Split Mode Graph Scheduling (default: %d)", params.split_mode_graph_scheduling});
     options.push_back({ "*",         "-sas,  --scheduler_async,",       "Async evaluation of compute graphs: %d)", params.scheduler_async});
+    options.push_back({ "*",         "-fdn,  --fused-delta-net N",      "Use fused delta-net when batch size is <= N with recurrent models: %d)", params.fused_delta_net});
     options.push_back({ "*",         "-vq, --validate-quants",          "validate quantized data while loading the model (default: %d)", params.validate_quants});
     options.push_back({ "*",           "-p,    --prompt PROMPT",        "prompt to start generation with\n"
                                                                         "in conversation mode, this will be used as system prompt\n"
@@ -3336,6 +3355,7 @@ struct llama_context_params common_context_params_to_llama(const gpt_params & pa
     cparams.split_mode_graph_scheduling = params.split_mode_graph_scheduling;
     //cparams.split_mode_f16    = params.split_mode_f16;
     cparams.scheduler_async   = params.scheduler_async;
+    cparams.fused_delta_net   = params.fused_delta_net;
     cparams.min_experts       = params.min_experts;
     cparams.thresh_experts    = params.thresh_experts;
     cparams.only_active_experts = params.only_active_exps;
@@ -4346,6 +4366,7 @@ void yaml_dump_non_result_info(FILE * stream, const gpt_params & params, const l
     //fprintf(stream, "split_mode_f16: %s # default: true\n", params.split_mode_f16 ? "true" : "false");
     fprintf(stream, "reduce_type: %s # default f16\n", params.reduce_type.c_str());
     fprintf(stream, "scheduler_async: %s # default: false\n", params.scheduler_async ? "true" : "false");
+    fprintf(stream, "fused_delta_net: %d # default: 0\n", params.fused_delta_net );
     fprintf(stream, "ser: %d,%g # defaulr: -1,0\n", params.min_experts, params.thresh_experts);
     fprintf(stream, "temp: %f # default: 0.8\n", sparams.temp);
 
