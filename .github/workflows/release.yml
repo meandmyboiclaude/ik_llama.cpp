@@ -747,7 +747,7 @@ jobs:
           echo "Renaming and moving zips to release..."
           for zip_file in artifact/llama-*.zip; do
             base_name=$(basename "$zip_file" .zip)
-            zip_name="ik_llama-${base_name#llama-th-}.zip"
+            zip_name="ik_llama-th-${base_name#llama-th-}.zip"
             echo "Moving $zip_file to release/$zip_name"
             mv "$zip_file" "release/$zip_name"
           done
