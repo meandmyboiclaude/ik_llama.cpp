@@ -154,7 +154,7 @@ static bool try_parse_ftype(const std::string & ftype_str_in, llama_ftype & ftyp
 //
 [[noreturn]]
 static void usage(const char * executable) {
-    printf("usage: %s [--help] [--allow-requantize] [--leave-output-tensor] [--pure] [--imatrix] [--hide-imatrix] [--include-weights] [--exclude-weights] [--output-tensor-type] [--token-embedding-type] [--ffn-gate-inp-type] [--attn-q-type] [--attn-k-type] [--attn-v-type] [--attn-qkv-type] [--attn-output-type] [--ffn-gate-type] [--ffn-down-type] [--ffn-up-type] [--keep-split] [--override-kv] [--individual-tensors LIST] [--partial-requant] model-f32.gguf [model-quant.gguf] type [nthreads]\n\n", executable);
+    printf("usage: %s [--help] [--allow-requantize] [--leave-output-tensor] [--pure] [--imatrix] [--hide-imatrix] [--include-weights] [--exclude-weights] [--output-tensor-type] [--token-embedding-type] [--ffn-gate-inp-type] [--attn-q-type] [--attn-k-type] [--attn-v-type] [--attn-qkv-type] [--attn-output-type] [--ffn-gate-type] [--ffn-down-type] [--ffn-up-type] [--keep-split] [--override-kv] [--individual-tensors LIST] [--skip-first-shard] [--partial-requant] model-f32.gguf [model-quant.gguf] type [nthreads]\n\n", executable);
     printf("  --allow-requantize: Allows requantizing tensors that have already been quantized. Warning: This can severely reduce quality compared to quantizing from 16bit or 32bit\n");
     printf("  --leave-output-tensor: Will leave output.weight un(re)quantized. Increases model size but may also increase quality, especially when requantizing\n");
     printf("  --pure: Disable k-quant mixtures and quantize all tensors to the same type\n");
@@ -169,6 +169,7 @@ static void usage(const char * executable) {
     printf("  --repack Repack all tensors to the corresponding _r4/8 variant if available.\n\n");
     printf("  --repack-pattern Comma separated list of regexs to use for matching tensor names to be repacked.\n\n");
     printf("  --individual-tensors LIST: Comma-separated list of split IDs (integers >= 2). Requires --keep-split to be set. Example: --individual-tensors 2,5,1094 will produce tensor_ids = {1,4,1093}.\n\n");
+    printf("  --skip-first-shard: Do not output the first shard (assumed to be metadata only and not containing tensors). Must be used in combination with --individual-tensors and --keep-split.\n\n");
     printf("Additional specific tensor quantization types used in the custom quant scheme 'CQS (default is Q2_K):\n");
     printf("      --attn-q-type ggml_type: use this ggml_type for the attn_q.weight tensor.\n");
     printf("      --attn-k-type ggml_type: use this ggml_type for the attn_k.weight tensor.\n");
@@ -506,6 +507,8 @@ int main(int argc, char ** argv) {
             } else {
                 usage(argv[0]);
             }
+        } else if (strcmp(argv[arg_idx], "--skip-first-shard") == 0) {
+            params.skip_first_shard = true;
         } else if (strcmp(argv[arg_idx], "--partial-requant") == 0) {
             params.partial_requant = true;
         } else {
@@ -523,7 +526,7 @@ int main(int argc, char ** argv) {
         usage(argv[0]);
     }
 
-    // --individual-tensors is mandatory (per user's request)
+    // --individual-tensors is mandatory
     if (!individual_tensors_specified) {
         fprintf(stderr, "%s: missing required option --individual-tensors\n", argv[0]);
         usage(argv[0]);

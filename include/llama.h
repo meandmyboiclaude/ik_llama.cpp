@@ -488,6 +488,7 @@ extern "C" {
         bool only_copy;                      // only copy tensors - ftype, allow_requantize and quantize_output_tensor are ignored
         bool pure;                           // quantize all tensors to the default type
         bool keep_split;                     // quantize to the same number of shards
+        bool skip_first_shard;               // Do not output the first shard (assumed metadata only, not containing tensors)
         bool ignore_imatrix_rules;           // If set to true, the built-in rules for refusing to quantize into certain quants without imatrix are ignored
         bool only_repack;                    // Only repack tensors
         bool dry_run;                        //

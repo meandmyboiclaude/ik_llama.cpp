@@ -1240,6 +1240,13 @@ static void llama_model_quantize_internal(const std::string & fname_inp, const s
             }
         }
 
+        if (params->skip_first_shard) {
+            if (cur_split == 0) {
+                LLAMA_LOG_INFO("%s: split file %s skipped because --skip-first-shard is enabled\n", __func__, fname.c_str());
+                return;
+            }
+        }
+
         ensure_output_directory(fname);
         fout = std::ofstream(fname, std::ios::binary);
         fout.exceptions(std::ofstream::failbit); // fail fast on write errors
