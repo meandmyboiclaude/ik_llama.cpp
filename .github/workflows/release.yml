@@ -370,7 +370,6 @@ jobs:
             -DLLAMA_CURL=OFF ^
             -DCMAKE_C_FLAGS="%CFLAGS%" ^
             -DCMAKE_CXX_FLAGS="%CXXFLAGS%" ^
-            -DCMAKE_CUDA_STANDARD=17 ^
             ${{ env.CMAKE_ARGS }}
           cmake --build build --config Release --target llama-quantize
 
