@@ -295,43 +295,82 @@ jobs:
         run: |
           choco install ninja
 
-      - name: Detect Visual Studio installation
+      - name: Detect Visual Studio installation and available clang
         shell: pwsh
         run: |
+          # detect Enterprise, then BuildTools; set VS_DIR and LLVM_DIR (written to GITHUB_ENV)
           if (Test-Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise') {
-            Write-Host "Found Visual Studio Enterprise"
-            Add-Content -Path $env:GITHUB_ENV -Value 'VS_DIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
-            Add-Content -Path $env:GITHUB_ENV -Value 'LLVM_DIR=C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\Llvm\x64'
+            $vs = 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
+            $llvm = Join-Path $vs 'VC\Tools\Llvm\x64'
           }
           elseif (Test-Path 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools') {
-            Write-Host "Found Visual Studio BuildTools"
-            Add-Content -Path $env:GITHUB_ENV -Value 'VS_DIR=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools'
-            Add-Content -Path $env:GITHUB_ENV -Value 'LLVM_DIR=C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Tools\Llvm\x64'
+            $vs = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools'
+            $llvm = Join-Path $vs 'VC\Tools\Llvm\x64'
           }
           else {
-            Write-Error "No supported Visual Studio installation found."
+            Write-Error "No supported Visual Studio installation found under expected paths."
+            exit 1
+          }
+
+          Write-Host "Detected VS root: $vs"
+          Write-Host "Assuming LLVM dir: $llvm"
+
+          Add-Content -Path $env:GITHUB_ENV -Value ("VS_DIR=" + $vs)
+          Add-Content -Path $env:GITHUB_ENV -Value ("LLVM_DIR=" + $llvm)
+
+          # now detect which clang binary exists
+          $clangCl = Join-Path $llvm 'bin\clang-cl.exe'
+          $clang   = Join-Path $llvm 'bin\clang.exe'
+
+          if (Test-Path $clangCl) {
+            Write-Host "Found clang-cl at $clangCl"
+            Add-Content -Path $env:GITHUB_ENV -Value 'CMAKE_COMPILER_TYPE=clang-cl'
+          }
+          elseif (Test-Path $clang) {
+            Write-Host "Found clang at $clang"
+            Add-Content -Path $env:GITHUB_ENV -Value 'CMAKE_COMPILER_TYPE=clang'
+          }
+          else {
+            Write-Error "No clang binary found in $llvm. Please install the LLVM/clang components in Visual Studio (Individual components -> filter 'clang')."
+            exit 1
           }
 
       - name: Build
         shell: cmd
         run: |
+          rem set up the MSVC environment
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+
+          rem choose compiler binary and flags based on detection
+          if "%CMAKE_COMPILER_TYPE%"=="clang-cl" (
+            set "CC=%LLVM_DIR%\bin\clang-cl.exe"
+            set "CXX=%LLVM_DIR%\bin\clang-cl.exe"
+            set "CFLAGS=/clang:-march=znver4 /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
+            set "CXXFLAGS=/EHsc /clang:-march=znver4 /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
+          ) else (
+            rem fallback to clang/clang++
+            set "CC=%LLVM_DIR%\bin\clang.exe"
+            set "CXX=%LLVM_DIR%\bin\clang++.exe"
+            set "CFLAGS=-march=znver4 -fvectorize -ffp-model=fast -fno-finite-math-only -Wno-format -Wno-unused-variable -Wno-unused-function -Wno-gnu-zero-variadic-macro-arguments"
+            set "CXXFLAGS=-march=znver4 -fvectorize -ffp-model=fast -fno-finite-math-only -Wno-format -Wno-unused-variable -Wno-unused-function -Wno-gnu-zero-variadic-macro-arguments"
+          )
+
           cmake -S . -B build -G "Ninja Multi-Config" ^
             -DCMAKE_SYSTEM_NAME=Windows ^
             -DCMAKE_SYSTEM_PROCESSOR=x86_64 ^
-            -DCMAKE_C_COMPILER=clang ^
-            -DCMAKE_CXX_COMPILER=clang++ ^
-            -DCMAKE_CUDA_COMPILER="%CUDA_DIR%/bin/nvcc.exe" ^
+            -DCMAKE_C_COMPILER="%CC%" ^
+            -DCMAKE_CXX_COMPILER="%CXX%" ^
+            -DCMAKE_CUDA_COMPILER="%CUDA_DIR%\bin\nvcc.exe" ^
             -DLLAMA_FATAL_WARNINGS=OFF ^
             -DGGML_NATIVE=OFF ^
             -DGGML_CPU_ALL_VARIANTS=${{ matrix.arch == 'x64' && 'ON' || 'OFF' }} ^
             -DGGML_OPENMP=ON ^
-            -DCURL_LIBRARY="%CURL_PATH%/lib/libcurl.dll.a" ^
-            -DCURL_INCLUDE_DIR="%CURL_PATH%/include" ^
+            -DCURL_LIBRARY="%CURL_PATH%\lib\libcurl.dll.a" ^
+            -DCURL_INCLUDE_DIR="%CURL_PATH%\include" ^
             -DGGML_MAX_CONTEXTS=2048 ^
             -DLLAMA_CURL=OFF ^
-            -DCMAKE_C_FLAGS="/clang:-march=znver4 /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments" ^
-            -DCMAKE_CXX_FLAGS="/EHsc /clang:-march=znver4 /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments" ^
+            -DCMAKE_C_FLAGS="%CFLAGS%" ^
+            -DCMAKE_CXX_FLAGS="%CXXFLAGS%" ^
             -DCMAKE_CUDA_STANDARD=17 ^
             ${{ env.CMAKE_ARGS }}
           cmake --build build --config Release --target llama-quantize
