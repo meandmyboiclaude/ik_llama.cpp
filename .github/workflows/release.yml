@@ -345,8 +345,8 @@ jobs:
           if "%CMAKE_COMPILER_TYPE%"=="clang-cl" (
             set "CC=%LLVM_DIR%\bin\clang-cl.exe"
             set "CXX=%LLVM_DIR%\bin\clang-cl.exe"
-            set "CFLAGS=/clang:/clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
-            set "CXXFLAGS=/EHsc /clang:/clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
+            set "CFLAGS=/clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
+            set "CXXFLAGS=/EHsc /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
           ) else (
             rem fallback to clang/clang++
             set "CC=%LLVM_DIR%\bin\clang.exe"
