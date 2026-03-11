@@ -279,10 +279,6 @@ jobs:
         # include allows us to carry both march and optional mtune per entry
         include:
           - arch: x64
-            march: x86-64-v2
-            mtune: ""
-            label: x86_64_v2
-          - arch: x64
             march: x86-64-v3
             mtune: ""
             label: x86_64_v3
