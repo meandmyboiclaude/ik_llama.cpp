@@ -379,7 +379,47 @@ jobs:
 
       - name: Pack artifacts
         id: pack_artifacts
+        shell: pwsh
         run: |
+          # quick note: "VC143" is the Visual C++ toolset folder name (msvc v14.3x, VS 2022).
+          $redistRoot = Join-Path $env:VS_DIR "VC\Redist\MSVC"
+          if (-not (Test-Path $redistRoot)) {
+            Write-Error "MSVC redist root not found at $redistRoot (VS_DIR = $env:VS_DIR)"
+            exit 1
+          }
+          # Prefer newest redist version folder name (sort descending)
+          $msvcDirs = Get-ChildItem -Path $redistRoot -Directory -ErrorAction SilentlyContinue |
+                      Sort-Object Name -Descending
+          if (-not $msvcDirs) {
+            Write-Error "No versioned directories found under $redistRoot"
+            exit 1
+          }
+          $arch        = "${{ matrix.arch }}"                                   # e.g. x64 or arm64
+          $llvmArch    = "${{ matrix.arch == 'x64' && 'x86_64' || 'aarch64' }}"  # keep your existing mapping
+          $foundDll    = $null
+          $foundDir    = $null
+          foreach ($d in $msvcDirs) {
+            # common redist layout uses debug_nonredist\<arch>\... ; search recursively for libomp140.*dll
+            $searchRoot = Join-Path $d.FullName ("debug_nonredist\$arch")
+            if (-not (Test-Path $searchRoot)) { continue }
+            # look for libomp140.<arch>.dll (most robust) or any libomp140*.dll
+            $dll = Get-ChildItem -Path $searchRoot -Filter "libomp140.$llvmArch.dll" -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+            if (-not $dll) {
+              # fallback: maybe filename differs slightly -> search libomp140*.dll
+              $dll = Get-ChildItem -Path $searchRoot -Filter "libomp140*.dll" -Recurse -File -ErrorAction SilentlyContinue | Select-Object -First 1
+            }
+            if ($dll) {
+              $foundDll = $dll.FullName
+              $foundDir = $d.FullName
+              break
+            }
+          }
+          if (-not $foundDll) {
+            Write-Error "Could not locate libomp DLL under $redistRoot for arch '$arch' (searched directories: $($msvcDirs | ForEach-Object { $_.Name } -join ', '))."
+            exit 1
+          }
+          Write-Host "Found libomp DLL: $foundDll (in $foundDir)"
+          Copy-Item -Path $foundDll -Destination ".\build\bin\Release\" -Force
           7z a llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}.zip .\build\bin\Release\*
 
       - name: Upload artifacts
