@@ -286,7 +286,6 @@ jobs:
             march: x86-64-v4
             mtune: ""
             label: x86_64_v4
-          # AMD Zen family (znver1 supports AVX2; include newer gens too)
           - arch: x64
             march: znver1
             mtune: znver1
@@ -307,31 +306,71 @@ jobs:
             march: znver5
             mtune: znver5
             label: znver5
-          # Intel AVX2-capable microarchitectures (useful set)
+          - arch: x64
+            march: znver6
+            mtune: znver6
+            label: znver6
+          # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-2/march.html
           - arch: x64
             march: haswell
             mtune: haswell
             label: haswell
           - arch: x64
+            march: core-avx2
+            mtune: core-avx2
+            label: core-avx2
+          - arch: x64
             march: broadwell
             mtune: broadwell
             label: broadwell
+          - arch: x64
+            march: common-avx512
+            mtune: common-avx512
+            label: common-avx512
           - arch: x64
             march: skylake
             mtune: skylake
             label: skylake
           - arch: x64
+            march: skylake-avx512
+            mtune: skylake-avx512
+            label: skylake-avx512
+          - arch: x64
+            march: skx
+            mtune: skx
+            label: skx
+          - arch: x64
+            march: cascadelake
+            mtune: cascadelake
+            label: cascadelake
+          - arch: x64
+            march: cooperlake
+            mtune: cooperlake
+            label: cooperlake
+          - arch: x64
+            march: cannonlake
+            mtune: cannonlake
+            label: cannonlake
+          - arch: x64
             march: icelake-client
             mtune: icelake-client
-            label: icelake
+            label: icelake-client
+          - arch: x64
+            march: rocketlake
+            mtune: rocketlake
+            label: rocketlake
+          - arch: x64
+            march: icelake-server
+            mtune: icelake-server
+            label: icelake-server
           - arch: x64
             march: tigerlake
             mtune: tigerlake
             label: tigerlake
           - arch: x64
-            march: rocketlake
-            mtune: rocketlake
-            label: rocketlake
+            march: sapphirerapids
+            mtune: sapphirerapids
+            label: sapphirerapids
           - arch: x64
             march: alderlake
             mtune: alderlake
@@ -344,6 +383,22 @@ jobs:
             march: meteorlake
             mtune: meteorlake
             label: meteorlake
+          - arch: x64
+            march: sierraforest
+            mtune: sierraforest
+            label: sierraforest
+          - arch: x64
+            march: grandridge
+            mtune: grandridge
+            label: grandridge
+          - arch: x64
+            march: graniterapids
+            mtune: graniterapids
+            label: graniterapids
+          - arch: x64
+            march: emeraldrapids
+            mtune: emeraldrapids
+            label: emeraldrapids
 
     env:
       MARCH: ${{ matrix.march }}
@@ -974,15 +1029,29 @@ jobs:
             - [llama-quantize for Windows — znver3 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver3.zip)
             - [llama-quantize for Windows — znver4 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver4.zip)
             - [llama-quantize for Windows — znver5 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver5.zip)
+            - [llama-quantize for Windows — znver6 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver6.zip)
             - [llama-quantize for Windows — haswell (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-haswell.zip)
+            - [llama-quantize for Windows — core-avx2 (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-core-avx2.zip)
             - [llama-quantize for Windows — broadwell (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-broadwell.zip)
+            - [llama-quantize for Windows — common-avx512 (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-common-avx512.zip)
             - [llama-quantize for Windows — skylake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-skylake.zip)
-            - [llama-quantize for Windows — icelake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-icelake.zip)
-            - [llama-quantize for Windows — tigerlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-tigerlake.zip)
+            - [llama-quantize for Windows — skylake-avx512 (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-skylake-avx512.zip)
+            - [llama-quantize for Windows — skx (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-skx.zip)
+            - [llama-quantize for Windows — cascadelake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-cascadelake.zip)
+            - [llama-quantize for Windows — cooperlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-cooperlake.zip)
+            - [llama-quantize for Windows — cannonlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-cannonlake.zip)
+            - [llama-quantize for Windows — icelake-client (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-icelake-client.zip)
             - [llama-quantize for Windows — rocketlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-rocketlake.zip)
+            - [llama-quantize for Windows — icelake-server (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-icelake-server.zip)
+            - [llama-quantize for Windows — tigerlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-tigerlake.zip)
+            - [llama-quantize for Windows — sapphirerapids (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-sapphirerapids.zip)
             - [llama-quantize for Windows — alderlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-alderlake.zip)
             - [llama-quantize for Windows — raptorlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-raptorlake.zip)
             - [llama-quantize for Windows — meteorlake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-meteorlake.zip)
+            - [llama-quantize for Windows — sierraforest (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-sierraforest.zip)
+            - [llama-quantize for Windows — grandridge (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-grandridge.zip)
+            - [llama-quantize for Windows — graniterapids (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-graniterapids.zip)
+            - [llama-quantize for Windows — emeraldrapids (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-emeraldrapids.zip)
 
             For more information about this version of llama-quantize: https://github.com/Thireus/GGUF-Tool-Suite/issues/45
             For any issues please open a ticket on https://github.com/Thireus/GGUF-Tool-Suite/issues
