@@ -966,8 +966,7 @@ jobs:
             **Linux:**
             - [llama-quantize for Ubuntu x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-ubuntu-x64.zip)
 
-            **Windows (choose the x86_64_v2 architecture if you're unsure):**
-            - [llama-quantize for Windows — x86_64_v2 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x86_64_v2.zip)
+            **Windows (try x86_64_v3 if you're unsure of your processor architecture):**
             - [llama-quantize for Windows — x86_64_v3 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x86_64_v3.zip)
             - [llama-quantize for Windows — x86_64_v4 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x86_64_v4.zip)
             - [llama-quantize for Windows — znver1 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver1.zip)
