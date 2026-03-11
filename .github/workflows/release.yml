@@ -276,7 +276,79 @@ jobs:
 
     strategy:
       matrix:
-        arch: ['x64'] #, 'arm64'
+        # include allows us to carry both march and optional mtune per entry
+        include:
+          - arch: x64
+            march: x86-64-v2
+            mtune: ""
+            label: x86_64_v2
+          - arch: x64
+            march: x86-64-v3
+            mtune: ""
+            label: x86_64_v3
+          - arch: x64
+            march: x86-64-v4
+            mtune: ""
+            label: x86_64_v4
+          # AMD Zen family (znver1 supports AVX2; include newer gens too)
+          - arch: x64
+            march: znver2
+            mtune: znver2
+            label: znver2
+          - arch: x64
+            march: znver3
+            mtune: znver3
+            label: znver3
+          - arch: x64
+            march: znver4
+            mtune: znver4
+            label: znver4
+          - arch: x64
+            march: znver5
+            mtune: znver5
+            label: znver5
+          # Intel AVX2-capable microarchitectures (useful set)
+          - arch: x64
+            march: haswell
+            mtune: haswell
+            label: haswell
+          - arch: x64
+            march: broadwell
+            mtune: broadwell
+            label: broadwell
+          - arch: x64
+            march: skylake
+            mtune: skylake
+            label: skylake
+          - arch: x64
+            march: icelake-client
+            mtune: icelake-client
+            label: icelake
+          - arch: x64
+            march: tigerlake
+            mtune: tigerlake
+            label: tigerlake
+          - arch: x64
+            march: rocketlake
+            mtune: rocketlake
+            label: rocketlake
+          - arch: x64
+            march: alderlake
+            mtune: alderlake
+            label: alderlake
+          - arch: x64
+            march: raptorlake
+            mtune: raptorlake
+            label: raptorlake
+          - arch: x64
+            march: meteorlake
+            mtune: meteorlake
+            label: meteorlake
+
+    env:
+      MARCH: ${{ matrix.march }}
+      MTUNE: ${{ matrix.mtune }}
+      BUILD_LABEL: ${{ matrix.label }}
 
     steps:
       - name: Clone
@@ -287,7 +359,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2.16
         with:
-          key: windows-latest-cmake-cpu-${{ matrix.arch }}
+          key: windows-latest-cmake-cpu-${{ env.BUILD_LABEL }}
           variant: ccache
           evict-old-files: 1d
 
@@ -337,22 +409,31 @@ jobs:
 
       - name: Build
         shell: cmd
+        env:
+          MARCH: ${{ env.MARCH }}
+          MTUNE: ${{ env.MTUNE }}
         run: |
           rem set up the MSVC environment
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
+
+          rem prepare optional mtune flags (only set if MTUNE is non-empty)
+          set "MTUNE_FLAG="
+          if not "%MTUNE%"=="" set "MTUNE_FLAG=/clang:-mtune=%MTUNE%"
 
           rem choose compiler binary and flags based on detection
           if "%CMAKE_COMPILER_TYPE%"=="clang-cl" (
             set "CC=%LLVM_DIR%\bin\clang-cl.exe"
             set "CXX=%LLVM_DIR%\bin\clang-cl.exe"
-            set "CFLAGS=/clang:-march=x86-64-v2 /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
-            set "CXXFLAGS=/EHsc /clang:-march=x86-64-v2 /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
+            set "CFLAGS=/clang:-march=%MARCH% %MTUNE_FLAG% /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
+            set "CXXFLAGS=/EHsc /clang:-march=%MARCH% %MTUNE_FLAG% /clang:-fvectorize /clang:-ffp-model=fast /clang:-fno-finite-math-only /clang:-Wno-format /clang:-Wno-unused-variable /clang:-Wno-unused-function /clang:-Wno-gnu-zero-variadic-macro-arguments"
           ) else (
             rem fallback to clang/clang++
             set "CC=%LLVM_DIR%\bin\clang.exe"
             set "CXX=%LLVM_DIR%\bin\clang++.exe"
-            set "CFLAGS=-march=x86-64-v2 -fvectorize -ffp-model=fast -fno-finite-math-only -Wno-format -Wno-unused-variable -Wno-unused-function -Wno-gnu-zero-variadic-macro-arguments"
-            set "CXXFLAGS=-march=x86-64-v2 -fvectorize -ffp-model=fast -fno-finite-math-only -Wno-format -Wno-unused-variable -Wno-unused-function -Wno-gnu-zero-variadic-macro-arguments"
+            set "MTUNE_FLAG_UNIX="
+            if not "%MTUNE%"=="" set "MTUNE_FLAG_UNIX=-mtune=%MTUNE%"
+            set "CFLAGS=-march=%MARCH% %MTUNE_FLAG_UNIX% -fvectorize -ffp-model=fast -fno-finite-math-only -Wno-format -Wno-unused-variable -Wno-unused-function -Wno-gnu-zero-variadic-macro-arguments"
+            set "CXXFLAGS=-march=%MARCH% %MTUNE_FLAG_UNIX% -fvectorize -ffp-model=fast -fno-finite-math-only -Wno-format -Wno-unused-variable -Wno-unused-function -Wno-gnu-zero-variadic-macro-arguments"
           )
 
           cmake -S . -B build -G "Ninja Multi-Config" ^
@@ -420,13 +501,14 @@ jobs:
           }
           Write-Host "Found libomp DLL: $foundDll (in $foundDir)"
           Copy-Item -Path $foundDll -Destination ".\build\bin\Release\" -Force
-          7z a llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}.zip .\build\bin\Release\*
+          $zipname = "llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.label }}.zip"
+          7z a $zipname .\build\bin\Release\*
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          path: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}.zip
-          name: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}.zip
+          path: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.label }}.zip
+          name: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.label }}.zip
 
   windows:
     if: false
