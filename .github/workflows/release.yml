@@ -361,7 +361,7 @@ jobs:
     #if: false
     strategy:
       matrix:
-        cuda: ['13.2'] # '11.7', '12.8', 
+        cuda: [12.8', '13.2'] # '11.7',
         instr: ['avx2', 'avx512', 'avx512_vnni', 'avx512_vnni_bf16', 'avx512_vnni_vbmi', 'avx512_vnni_vbmi_bf16'] # 'avx', 'noavx' won't compile because missing declarations all over the place
         include:
           - build: 'x64'
@@ -897,142 +897,182 @@ jobs:
       matrix:
         cuda: ['13.2'] # '11.7', '12.8'
         include:
-          - arch: x64
+          - cuda: '12.8'
+            arch: x64
             march: x86-64-v3
             mtune: ""
             label: x86_64_v3
             instr: avx2
-          - arch: x64
+          - cuda: '12.8'
+            arch: x64
             march: x86-64-v4
             mtune: ""
             label: x86_64_v4
             instr: avx512
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
+            march: x86-64-v3
+            mtune: ""
+            label: x86_64_v3
+            instr: avx2
+          - cuda: '13.2'
+            arch: x64
+            march: x86-64-v4
+            mtune: ""
+            label: x86_64_v4
+            instr: avx512
+          - cuda: '13.2'
+            arch: x64
             march: znver1
             mtune: znver1
             label: znver1
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: znver2
             mtune: znver2
             label: znver2
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: znver3
             mtune: znver3
             label: znver3
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: znver4
             mtune: znver4
             label: znver4
             instr: avx512_vnni_vbmi_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: znver5
             mtune: znver5
             label: znver5
             instr: avx512_vnni_vbmi_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: haswell
             mtune: haswell
             label: haswell
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: core-avx2
             mtune: core-avx2
             label: core-avx2
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: broadwell
             mtune: broadwell
             label: broadwell
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: skylake
             mtune: skylake
             label: skylake
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: skylake-avx512
             mtune: skylake-avx512
             label: skylake-avx512
             instr: avx512
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: skx
             mtune: skx
             label: skx
             instr: avx512
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: cascadelake
             mtune: cascadelake
             label: cascadelake
             instr: avx512_vnni
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: cooperlake
             mtune: cooperlake
             label: cooperlake
             instr: avx512_vnni_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: cannonlake
             mtune: cannonlake
             label: cannonlake
             instr: avx512
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: icelake-client
             mtune: icelake-client
             label: icelake-client
             instr: avx512_vnni_vbmi
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: rocketlake
             mtune: rocketlake
             label: rocketlake
             instr: avx512_vnni_vbmi
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: icelake-server
             mtune: icelake-server
             label: icelake-server
             instr: avx512_vnni_vbmi
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: tigerlake
             mtune: tigerlake
             label: tigerlake
             instr: avx512_vnni_vbmi
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: sapphirerapids
             mtune: sapphirerapids
             label: sapphirerapids
             instr: avx512_vnni_vbmi_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: alderlake
             mtune: alderlake
             label: alderlake
             instr: avx512_vnni_vbmi_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: raptorlake
             mtune: raptorlake
             label: raptorlake
             instr: avx512_vnni_vbmi
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: meteorlake
             mtune: meteorlake
             label: meteorlake
             instr: avx2
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: sierraforest
             mtune: sierraforest
             label: sierraforest
             instr: avx512_vnni_vbmi_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: grandridge
             mtune: grandridge
             label: grandridge
             instr: avx512_vnni_vbmi_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: graniterapids
             mtune: graniterapids
             label: graniterapids
             instr: avx512_vnni_vbmi_bf16
-          - arch: x64
+          - cuda: '13.2'
+            arch: x64
             march: emeraldrapids
             mtune: emeraldrapids
             label: emeraldrapids
@@ -1546,6 +1586,14 @@ jobs:
           - [Ubuntu x64 (Vulkan) AVX512 VNNI VBMI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-ubuntu-vulkan-x64-avx512_vnni_vbmi.zip)
           - [Ubuntu x64 (Vulkan) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-ubuntu-vulkan-x64-avx512_vnni_vbmi_bf16.zip)
 
+          **Linux CUDA 12.8:**
+          - [Ubuntu x64 (CUDA 12.8) AVX2](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-12.8-x64-avx2.zip) - [CUDA 12.8 DLLs](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-12.8-x64-avx2.zip)
+          - [Ubuntu x64 (CUDA 12.8) AVX512](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-12.8-x64-avx512.zip) - [CUDA 12.8 DLLs](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-12.8-x64-avx512.zip)
+          - [Ubuntu x64 (CUDA 12.8) AVX512 VNNI](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-12.8-x64-avx512_vnni.zip) - [CUDA 12.8 DLLs](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-12.8-x64-avx512_vnni.zip)
+          - [Ubuntu x64 (CUDA 12.8) AVX512 VNNI BF16](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-12.8-x64-avx512_vnni_bf16.zip) - [CUDA 12.8 DLLs](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-12.8-x64-avx512_vnni_bf16.zip)
+          - [Ubuntu x64 (CUDA 12.8) AVX512 VNNI VBMI](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-12.8-x64-x64-avx512_vnni_vbmi.zip) - [CUDA 12.8 DLLs](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-12.8-x64-avx512_vnni_vbmi.zip)
+          - [Ubuntu x64 (CUDA 12.8) AVX512 VNNI VBMI BF16](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-12.8-x64-avx512_vnni_vbmi_bf16.zip) - [CUDA 12.8 DLLs](https://github.com/Thireus/ik_llama.cpp/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-12.8-x64-avx512_vnni_vbmi_bf16.zip)
+
           **Linux CUDA 13.2:**
           - [Ubuntu x64 (CUDA 13.2) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-13.2-x64-avx2.zip) - [CUDA 13.2 DLLs](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-13.2-x64-avx2.zip)
           - [Ubuntu x64 (CUDA 13.2) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-13.2-x64-avx512.zip) - [CUDA 13.2 DLLs](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-13.2-x64-avx512.zip)
@@ -1584,6 +1632,10 @@ jobs:
           - [Windows grandridge (CPU) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-grandridge-avx512_vnni_vbmi_bf16.zip)
           - [Windows graniterapids (CPU) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-graniterapids-avx512_vnni_vbmi_bf16.zip)
           - [Windows emeraldrapids (CPU) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-emeraldrapids-avx512_vnni_vbmi_bf16.zip)
+
+          **Windows CUDA 12.8:**
+          - [Windows x86_64_v3 (CUDA 12.8) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-x86_64_v3-avx2.zip) - [CUDA 12.8 DLLs](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-x86_64_v3-avx2.zip)
+          - [Windows x86_64_v4 (CUDA 12.8) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-x86_64_v4-avx512.zip) - [CUDA 12.8 DLLs](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-x86_64_v4-avx512.zip)
 
           **Windows CUDA 13.2:**
           - [Windows x86_64_v3 (CUDA 13.2) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.2-x64-x86_64_v3-avx2.zip) - [CUDA 13.2 DLLs](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.2-x64-x86_64_v3-avx2.zip)
