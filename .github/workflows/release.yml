@@ -306,10 +306,10 @@ jobs:
             march: znver5
             mtune: znver5
             label: znver5
-          - arch: x64
-            march: znver6
-            mtune: znver6
-            label: znver6
+          # - arch: x64
+          #   march: znver6
+          #   mtune: znver6
+          #   label: znver6
           # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-2/march.html
           - arch: x64
             march: haswell
@@ -1029,7 +1029,6 @@ jobs:
             - [llama-quantize for Windows — znver3 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver3.zip)
             - [llama-quantize for Windows — znver4 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver4.zip)
             - [llama-quantize for Windows — znver5 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver5.zip)
-            - [llama-quantize for Windows — znver6 (AMD CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-znver6.zip)
             - [llama-quantize for Windows — haswell (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-haswell.zip)
             - [llama-quantize for Windows — core-avx2 (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-core-avx2.zip)
             - [llama-quantize for Windows — broadwell (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-broadwell.zip)
