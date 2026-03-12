@@ -1038,15 +1038,22 @@ jobs:
             label: emeraldrapids
             instr: avx512_vnni_vbmi_bf16
 
+    env:
+      MARCH: ${{ matrix.march }}
+      MTUNE: ${{ matrix.mtune }}
+      BUILD_LABEL: ${{ matrix.label }}
+      INSTR: ${{ matrix.instr }}
+
     steps:
       - name: Clone
-        id: checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Install ccache
+      - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2.16
         with:
-          key: windows-cuda-${{ matrix.cuda }}-${{ matrix.label }}-${{ matrix.instr }}
+          key: windows-cuda-${{ matrix.cuda }}-${{ env.BUILD_LABEL }}-${{ env.INSTR }}
           variant: ccache
           evict-old-files: 1d
 
@@ -1104,15 +1111,18 @@ jobs:
         id: cmake_build
         shell: cmd
         env:
-          MARCH: ${{ matrix.march }}
-          MTUNE: ${{ matrix.mtune }}
+          MARCH: ${{ env.MARCH }}
+          MTUNE: ${{ env.MTUNE }}
+          INSTR: ${{ env.INSTR }}
         run: |
-          rem setup MSVC env for x64
+          rem set up the MSVC environment
           call "%VS_DIR%\VC\Auxiliary\Build\vcvarsall.bat" x64
 
+          rem prepare optional mtune flags (only set if MTUNE is non-empty)
           set "MTUNE_FLAG="
           if not "%MTUNE%"=="" set "MTUNE_FLAG=/clang:-mtune=%MTUNE%"
 
+          rem choose compiler binary and flags based on detection
           if "%CMAKE_COMPILER_TYPE%"=="clang-cl" (
             set "CC=%LLVM_DIR%\bin\clang-cl.exe"
             set "CXX=%LLVM_DIR%\bin\clang-cl.exe"
@@ -1133,18 +1143,21 @@ jobs:
             -DCMAKE_SYSTEM_PROCESSOR=x86_64 ^
             -DCMAKE_C_COMPILER="%CC%" ^
             -DCMAKE_CXX_COMPILER="%CXX%" ^
+            -DLLAMA_FATAL_WARNINGS=OFF ^
             -DGGML_NATIVE=OFF ^
+            -DGGML_CPU_ALL_VARIANTS=${{ matrix.arch == 'x64' && 'ON' || 'OFF' }} ^
             -DGGML_OPENMP=ON ^
             -DGGML_AVX2=${{ matrix.instr == 'avx2' && 'ON' || 'OFF' }} ^
             -DGGML_AVX512=${{ matrix.instr == 'avx512' && 'ON' || 'OFF' }} ^
             -DGGML_AVX512_VNNI=${{ contains(matrix.instr, 'vnni') && 'ON' || 'OFF' }} ^
             -DGGML_AVX512_VBMI=${{ contains(matrix.instr, 'vbmi') && 'ON' || 'OFF' }} ^
             -DGGML_AVX512_BF16=${{ contains(matrix.instr, 'bf16') && 'ON' || 'OFF' }} ^
+            -DCURL_LIBRARY="%CURL_PATH%\lib\libcurl.dll.a" ^
+            -DCURL_INCLUDE_DIR="%CURL_PATH%\include" ^
             -DGGML_CUDA=ON ^
             -DGGML_SCHED_MAX_COPIES=1 ^
             -DGGML_CUDA_IQK_FORCE_BF16=1 ^
             -DGGML_MAX_CONTEXTS=2048 ^
-            -DLLAMA_CURL=OFF ^
             -DGGML_CUDA_USE_GRAPHS=ON ^
             -DCMAKE_C_FLAGS="%CFLAGS%" ^
             -DCMAKE_CXX_FLAGS="%CXXFLAGS%" ^
