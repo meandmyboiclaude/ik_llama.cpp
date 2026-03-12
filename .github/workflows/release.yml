@@ -320,10 +320,6 @@ jobs:
             mtune: broadwell
             label: broadwell
           - arch: x64
-            march: common-avx512
-            mtune: common-avx512
-            label: common-avx512
-          - arch: x64
             march: skylake
             mtune: skylake
             label: skylake
@@ -1028,7 +1024,6 @@ jobs:
             - [llama-quantize for Windows — haswell (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-haswell.zip)
             - [llama-quantize for Windows — core-avx2 (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-core-avx2.zip)
             - [llama-quantize for Windows — broadwell (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-broadwell.zip)
-            - [llama-quantize for Windows — common-avx512 (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-common-avx512.zip)
             - [llama-quantize for Windows — skylake (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-skylake.zip)
             - [llama-quantize for Windows — skylake-avx512 (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-skylake-avx512.zip)
             - [llama-quantize for Windows — skx (Intel CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-skx.zip)
