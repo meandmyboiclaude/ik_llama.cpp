@@ -306,10 +306,6 @@ jobs:
             march: znver5
             mtune: znver5
             label: znver5
-          # - arch: x64
-          #   march: znver6
-          #   mtune: znver6
-          #   label: znver6
           # https://www.intel.com/content/www/us/en/docs/dpcpp-cpp-compiler/developer-guide-reference/2025-2/march.html
           - arch: x64
             march: haswell
