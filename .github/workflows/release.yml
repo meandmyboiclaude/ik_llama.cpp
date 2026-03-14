@@ -1135,7 +1135,10 @@ jobs:
             **Windows MSVC:**
             - [llama-quantize for Windows x64 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{ steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x64.zip)
 
-            Experimental Windows Clang builds - which are supposed to run faster when tailored to your specific CPU architecture:
+            ---
+            ### Experimental Windows Clang builds can be found below
+
+            *These special builds are supposed to run faster when tailored to your specific CPU architecture.*
 
             **Windows Clang (try x86_64_v3 if you're unsure of your processor architecture):**
             - [llama-quantize for Windows — x86_64_v3 - AVX2 (CPU)](https://github.com/Thireus/ik_llama.cpp/releases/download/${{steps.tag.outputs.name }}/ik_llama-${{ steps.tag.outputs.name }}-bin-win-cpu-x86_64_v3.zip)
