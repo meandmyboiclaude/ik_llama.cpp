@@ -1836,6 +1836,12 @@ jobs:
 
           </details>
 
+          Feeling lost? Why not copy paste this list to your favourite LLM along with this prompt (tweak your system config as needed):
+          
+          ```
+          This is my CPU: i9-7980; this is my OS: Windows 11; I use CUDA 13.2; I have 2x Nvidia GPUs; I don't mind experimenting, as long as it provides the best performances for my system configuration. Which exact flavor entry from the list below best match my configuration for best performance (prioritize GPU over CPU if my hardware configuration matches)? Best match my architecture for combined GPU and CPU performance (always prioritize GPU over CPU where that makes sense). Suggest 1 best option and 2 to 4 secondary options. Always include at least one option from the list above the experimental section. Where you see a dash in the list it means there are two separate items, "item1 - item2", item2 is just a link to obtain the cudart DLLs/dynamic libs for item1, so you must ignore it. Output item1 naming only and as exactly seen in the list.
+          ```
+
           For ref. about CPU capabilities (always choose AVX2 if your CPU isn't AVX512-capable): https://github.com/Thireus/GGUF-Tool-Suite/issues/47#issuecomment-3681021233
 
           **macOS (you might want to try disabling Metal by using `-dev none` to check if it performs better):**
