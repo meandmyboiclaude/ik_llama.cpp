@@ -488,6 +488,69 @@ jobs:
 
     strategy:
       matrix:
+        arch: ['x64'] #, 'arm64'
+        instr: ['avx2', 'avx512', 'avx512_vnni', 'avx512_vnni_bf16', 'avx512_vnni_vbmi', 'avx512_vnni_vbmi_bf16'] # 'avx', 'noavx' won't compile because missing declarations all over the place
+
+    steps:
+      - name: Clone
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2.16
+        with:
+          key: windows-latest-cmake-cpu-${{ matrix.arch }}-${{ matrix.instr }}
+          variant: ccache
+          evict-old-files: 1d
+
+      - name: Install Ninja
+        run: |
+          choco install ninja
+
+      - name: Build
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch == 'x64' && 'x64' || 'amd64_arm64' }}
+          cmake -S . -B build -G "Ninja Multi-Config" ^
+            -DLLAMA_FATAL_WARNINGS=OFF ^
+            -DGGML_NATIVE=OFF ^
+            -DGGML_CPU_ALL_VARIANTS=${{ matrix.arch == 'x64' && 'ON' || 'OFF' }} ^
+            -DGGML_OPENMP=ON ^
+            -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} ^
+            -DGGML_AVX2=${{ (matrix.instr == 'avx2' || matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512=${{ (matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512_VNNI=${{ (matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512_VBMI=${{ (matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512_BF16=${{ (matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DCURL_LIBRARY="%CURL_PATH%\lib\libcurl.dll.a" ^
+            -DCURL_INCLUDE_DIR="%CURL_PATH%\include" ^
+            -DGGML_MAX_CONTEXTS=2048 ^
+            -DLLAMA_CURL=OFF ^
+            ${{ env.CMAKE_ARGS }}
+          cmake --build build --config Release
+
+      - name: Determine tag name
+        id: tag
+        uses: ./.github/actions/get-tag-name
+
+      - name: Pack artifacts
+        id: pack_artifacts
+        run: |
+          7z a llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
+          name: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
+
+  windows-cpu-clang:
+    #if: false # Not ready yet
+    runs-on: windows-2022
+
+    strategy:
+      matrix:
         include:
           - arch: x64
             march: x86-64-v3
@@ -888,8 +951,94 @@ jobs:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip
 
-  # windows-cuda (CUDA builds)
   windows-cuda:
+    #if: false
+    runs-on: windows-2022
+
+    strategy:
+      matrix:
+        cuda: ['12.8', '13.2'] # , '11.7'
+        instr: ['avx2', 'avx512', 'avx512_vnni', 'avx512_vnni_bf16', 'avx512_vnni_vbmi', 'avx512_vnni_vbmi_bf16'] # 'avx', 'noavx' won't compile because missing declarations all over the place
+        
+    steps:
+      - name: Clone
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Install ccache
+        uses: hendrikmuhs/ccache-action@v1.2.16
+        with:
+          key: windows-cuda-${{ matrix.cuda }}-${{ matrix.instr }}
+          variant: ccache
+          evict-old-files: 1d
+
+      - name: Install CUDA Toolkit
+        uses: ./.github/actions/windows-setup-cuda
+        with:
+          cuda_version: ${{ matrix.cuda }}
+
+      - name: Install Ninja
+        id: install_ninja
+        run: |
+          choco install ninja
+
+      - name: Build
+        id: cmake_build
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64
+          cmake -S . -B build -G "Ninja Multi-Config" ^
+            -DGGML_NATIVE=OFF ^
+            -DGGML_OPENMP=ON ^
+            -DGGML_AVX=${{ matrix.instr == 'avx' && 'ON' || 'OFF' }} ^
+            -DGGML_AVX2=${{ (matrix.instr == 'avx2' || matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512=${{ (matrix.instr == 'avx512' || matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512_VNNI=${{ (matrix.instr == 'avx512_vnni' || matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512_VBMI=${{ (matrix.instr == 'avx512_vnni_vbmi' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DGGML_AVX512_BF16=${{ (matrix.instr == 'avx512_vnni_bf16' || matrix.instr == 'avx512_vnni_vbmi_bf16') && 'ON' || 'OFF' }} ^
+            -DCURL_LIBRARY="%CURL_PATH%\lib\libcurl.dll.a" ^
+            -DCURL_INCLUDE_DIR="%CURL_PATH%\include" ^
+            -DGGML_CUDA=ON ^
+            -DGGML_SCHED_MAX_COPIES=1 ^
+            -DGGML_CUDA_IQK_FORCE_BF16=1 ^
+            -DGGML_MAX_CONTEXTS=2048 ^
+            -DGGML_CUDA_USE_GRAPHS=ON ^
+            ${{ env.CMAKE_ARGS }}
+
+          set /A NINJA_JOBS=%NUMBER_OF_PROCESSORS%-1
+          cmake --build build --config Release -j %NINJA_JOBS%
+
+      - name: Determine tag name
+        id: tag
+        uses: ./.github/actions/get-tag-name
+
+      - name: Pack artifacts
+        id: pack_artifacts
+        run: |
+          7z a llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip .\build\bin\Release\*
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+          name: llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+
+      - name: Copy and pack Cuda runtime
+        run: |
+          echo "Cuda install location: ${{ env.CUDA_PATH }}"
+          $dst='.\build\bin\cudart\'
+          robocopy "${{env.CUDA_PATH}}\bin" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
+          robocopy "${{env.CUDA_PATH}}\lib" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
+          robocopy "${{env.CUDA_PATH}}\bin\x64" $dst cudart64_*.dll cublas64_*.dll cublasLt64_*.dll
+          7z a cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip $dst\*
+
+      - name: Upload Cuda runtime
+        uses: actions/upload-artifact@v4
+        with:
+          path: cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+          name: cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
+
+  windows-cuda-clang:
     #if: false
     runs-on: windows-2022
 
@@ -1493,7 +1642,9 @@ jobs:
     needs:
       #- windows
       - windows-cpu
+      - windows-cpu-clang
       - windows-cuda
+      - windows-cuda-clang
       #- windows-sycl
       #- windows-hip
       - ubuntu-22-cpu
@@ -1602,7 +1753,33 @@ jobs:
           - [Ubuntu x64 (CUDA 13.2) AVX512 VNNI VBMI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-13.2-x64-avx512_vnni_vbmi.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-13.2-x64-avx512_vnni_vbmi.zip)
           - [Ubuntu x64 (CUDA 13.2) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-ubuntu-cuda-13.2-x64-avx512_vnni_vbmi_bf16.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-ubuntu-cuda-13.2-x64-avx512_vnni_vbmi_bf16.zip)
 
-          **Windows CPU-only (try x86_64_v3 if you're unsure of your processor architecture):**
+          **Windows MSVC CPU-only:**
+          - [Windows x64 (CPU) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x64-avx2.zip)
+          - [Windows x64 (CPU) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x64-avx512.zip)
+          - [Windows x64 (CPU) AVX512 VNNI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x64-avx512_vnni.zip)
+          - [Windows x64 (CPU) AVX512 VNNI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x64-avx512_vnni_bf16.zip)
+          - [Windows x64 (CPU) AVX512 VNNI VBMI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x64-avx512_vnni_vbmi.zip)
+          - [Windows x64 (CPU) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x64-avx512_vnni_vbmi_bf16.zip)
+
+          **Windows MSVC CUDA 12.8:**
+          - [Windows x64 (CUDA 12.8) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-avx2.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-avx2.zip)
+          - [Windows x64 (CUDA 12.8) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-avx512.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-avx512.zip)
+          - [Windows x64 (CUDA 12.8) AVX512 VNNI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-avx512_vnni.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-avx512_vnni.zip)
+          - [Windows x64 (CUDA 12.8) AVX512 VNNI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-avx512_vnni_bf16.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-avx512_vnni_bf16.zip)
+          - [Windows x64 (CUDA 12.8) AVX512 VNNI VBMI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-x64-avx512_vnni_vbmi.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-avx512_vnni_vbmi.zip)
+          - [Windows x64 (CUDA 12.8) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-avx512_vnni_vbmi_bf16.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-avx512_vnni_vbmi_bf16.zip)
+
+          **Windows MSVC CUDA 13.1:**
+          - [Windows x64 (CUDA 13.1) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.1-x64-avx2.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.1-x64-avx2.zip)
+          - [Windows x64 (CUDA 13.1) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.1-x64-avx512.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.1-x64-avx512.zip)
+          - [Windows x64 (CUDA 13.1) AVX512 VNNI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.1-x64-avx512_vnni.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.1-x64-avx512_vnni.zip)
+          - [Windows x64 (CUDA 13.1) AVX512 VNNI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.1-x64-avx512_vnni_bf16.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.1-x64-avx512_vnni_bf16.zip)
+          - [Windows x64 (CUDA 13.1) AVX512 VNNI VBMI](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.1-x64-x64-avx512_vnni_vbmi.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.1-x64-avx512_vnni_vbmi.zip)
+          - [Windows x64 (CUDA 13.1) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.1-x64-avx512_vnni_vbmi_bf16.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.1-x64-avx512_vnni_vbmi_bf16.zip)
+
+          Experimental Windows Clang builds - which are supposed to run faster when tailored to your specific CPU architecture:
+
+          **Windows Clang CPU-only (try x86_64_v3 if you're unsure of your processor architecture):**
           - [Windows x86_64_v3 (CPU) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x86_64_v3-avx2.zip)
           - [Windows x86_64_v4 (CPU) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-x86_64_v4-avx512.zip)
           - [Windows znver1 (CPU) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-znver1-avx2.zip)
@@ -1633,7 +1810,7 @@ jobs:
           - [Windows graniterapids (CPU) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-graniterapids-avx512_vnni_vbmi_bf16.zip)
           - [Windows emeraldrapids (CPU) AVX512 VNNI VBMI BF16](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cpu-emeraldrapids-avx512_vnni_vbmi_bf16.zip)
 
-          **Windows CUDA 12.8 (try x86_64_v3 if you're unsure of your processor architecture):**
+          **Windows Clang CUDA 12.8 (try x86_64_v3 if you're unsure of your processor architecture):**
           - [Windows x86_64_v3 (CUDA 12.8) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-x86_64_v3-avx2.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-x86_64_v3-avx2.zip)
           - [Windows x86_64_v4 (CUDA 12.8) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-x86_64_v4-avx512.zip) - [DLLs only](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-x86_64_v4-avx512.zip)
 
