@@ -295,6 +295,29 @@ jobs:
         run: |
           choco install ninja
 
+      - name: Detect Visual Studio installation and available clang
+        shell: pwsh
+        run: |
+          # detect Enterprise, then BuildTools; set VS_DIR and LLVM_DIR (written to GITHUB_ENV)
+          if (Test-Path 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise') {
+            $vs = 'C:\Program Files\Microsoft Visual Studio\2022\Enterprise'
+            $llvm = Join-Path $vs 'VC\Tools\Llvm\x64'
+          }
+          elseif (Test-Path 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools') {
+            $vs = 'C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools'
+            $llvm = Join-Path $vs 'VC\Tools\Llvm\x64'
+          }
+          else {
+            Write-Error "No supported Visual Studio installation found under expected paths."
+            exit 1
+          }
+
+          Write-Host "Detected VS root: $vs"
+          Write-Host "Assuming LLVM dir: $llvm"
+
+          Add-Content -Path $env:GITHUB_ENV -Value ("VS_DIR=" + $vs)
+          Add-Content -Path $env:GITHUB_ENV -Value ("LLVM_DIR=" + $llvm)
+
       - name: Build
         shell: cmd
         run: |
