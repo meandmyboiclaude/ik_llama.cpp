@@ -1202,8 +1202,11 @@ json anthropic_params_from_json(
         }
         else if (system_param.is_array()) {
             for (const auto& block : system_param) {
-                if (json_value(block, "type", std::string()) == "text") {
-                    system_content += json_value(block, "text", std::string());
+                 if (json_value(block, "type", std::string()) == "text") {
+                    std::string content_block = json_value(block, "text", std::string());
+                    if (!string_starts_with(content_block, "x-anthropic-")) {
+                        system_content += content_block;
+                    }
                 }
             }
         }
@@ -1562,6 +1565,9 @@ json anthropic_params_from_json(
     llama_params["thinking_forced_open"] = chat_params.thinking_forced_open;
     for (const auto& stop : chat_params.additional_stops) {
         llama_params["stop"].push_back(stop);
+    }
+    if (!chat_params.parser.empty()) {
+        llama_params["chat_parser"] = chat_params.parser;
     }
 
     // Handle "n" field
