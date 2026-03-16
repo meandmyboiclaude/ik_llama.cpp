@@ -1949,7 +1949,7 @@ jobs:
           - [Windows x86_64_v3 (CUDA 12.8) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-x86_64_v3-avx2.zip) - [With Libraries](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-x86_64_v3-avx2.zip)
           - [Windows x86_64_v4 (CUDA 12.8) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-12.8-x64-x86_64_v4-avx512.zip) - [With Libraries](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-12.8-x64-x86_64_v4-avx512.zip)
 
-          **Windows CUDA 13.2 (try x86_64_v3 if you're unsure of your processor architecture):**
+          **Windows Clang CUDA 13.2 (try x86_64_v3 if you're unsure of your processor architecture):**
           - [Windows x86_64_v3 (CUDA 13.2) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.2-x64-x86_64_v3-avx2.zip) - [With Libraries](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.2-x64-x86_64_v3-avx2.zip)
           - [Windows x86_64_v4 (CUDA 13.2) AVX512](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.2-x64-x86_64_v4-avx512.zip) - [With Libraries](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.2-x64-x86_64_v4-avx512.zip)
           - [Windows znver1 (CUDA 13.2) AVX2](https://github.com/$repo/releases/download/$tag/ik_llama-$tag-bin-win-cuda-13.2-x64-znver1-avx2.zip) - [With Libraries](https://github.com/$repo/releases/download/$tag/ik_llama-cudart-$tag-bin-win-cuda-13.2-x64-znver1-avx2.zip)
