@@ -1109,7 +1109,7 @@ jobs:
 
       - name: Create release
         id: create_release
-        uses: Thireus/action-create-release@v1
+        uses: ggml-org/action-create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
