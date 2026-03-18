@@ -1178,20 +1178,113 @@ jobs:
         id: upload_release
         uses: actions/github-script@v3
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const path = require('path');
             const fs = require('fs');
+            const path = require('path');
+            const crypto = require('crypto');
+
             const release_id = '${{ steps.create_release.outputs.id }}';
-            for (let file of await fs.readdirSync('./release')) {
-              if (path.extname(file) === '.zip') {
-                console.log('uploadReleaseAsset', file);
-                await github.repos.uploadReleaseAsset({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  release_id: release_id,
-                  name: file,
-                  data: await fs.readFileSync(`./release/${file}`)
-                });
-              }
+            const dir = './release';
+            const maxAttempts = 4;
+            const backoffBaseMs = 500;
+
+            if (!fs.existsSync(dir)) {
+              console.log(`Directory ${dir} does not exist - nothing to upload.`);
+              return;
             }
+
+            const files = fs.readdirSync(dir).filter(f => path.extname(f) === '.zip');
+            if (files.length === 0) {
+              console.log('No .zip files found to upload.');
+              return;
+            }
+
+            async function sha256OfFile(filePath) {
+              return await new Promise((resolve, reject) => {
+                const h = crypto.createHash('sha256');
+                const s = fs.createReadStream(filePath);
+                s.on('error', reject);
+                s.on('data', chunk => h.update(chunk));
+                s.on('end', () => resolve(h.digest('hex')));
+              });
+            }
+
+            for (const file of files) {
+              const filePath = path.join(dir, file);
+              const stat = fs.statSync(filePath);
+              const expectedSize = stat.size;
+              const localSha = await sha256OfFile(filePath);
+              console.log(`\n=== Processing ${file} (${expectedSize} bytes) ===`);
+              console.log(`Local SHA256: ${localSha}`);
+
+              let attempt = 0;
+              let success = false;
+
+              while (attempt < maxAttempts && !success) {
+                attempt++;
+                console.log(`Upload attempt ${attempt} for ${file}...`);
+
+                const stream = fs.createReadStream(filePath);
+
+                try {
+                  const resp = await github.repos.uploadReleaseAsset({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    release_id: release_id,
+                    name: file,
+                    data: stream,
+                    headers: {
+                      'content-type': 'application/zip',
+                      'content-length': expectedSize
+                    }
+                  });
+
+                  // resp.data may include .digest (sha256) starting with GitHub's digest rollout.
+                  const uploadedSize = Number(resp.data.size);
+                  const assetDigest = resp.data.digest; // may be undefined on older servers/assets
+                  console.log(`Upload response: id=${resp.data.id} size=${uploadedSize} digest=${assetDigest ?? '<none>'}`);
+
+                  if (assetDigest) {
+                    // GitHub returns digest as hex SHA256 — compare to local SHA
+                    if (assetDigest.toLowerCase() === localSha.toLowerCase()) {
+                      console.log(`${file} uploaded and digest matches.`);
+                      success = true;
+                    } else {
+                      console.warn(`Digest mismatch for ${file}: local=${localSha} remote=${assetDigest}`);
+                    }
+                  } else {
+                    // Fallback: check size only (what you requested) if digest isn't available
+                    if (uploadedSize === expectedSize) {
+                      console.log(`${file} uploaded and size matches (digest not available).`);
+                      success = true;
+                    } else {
+                      console.warn(`Size mismatch for ${file}: expected=${expectedSize} uploaded=${uploadedSize}`);
+                    }
+                  }
+
+                  if (!success) {
+                    if (attempt < maxAttempts) {
+                      const wait = Math.pow(2, attempt) * backoffBaseMs;
+                      console.log(`Will retry in ${wait}ms...`);
+                      await new Promise(r => setTimeout(r, wait));
+                    } else {
+                      throw new Error(`Failed verification after ${maxAttempts} attempts for ${file}`);
+                    }
+                  }
+                } catch (err) {
+                  console.warn(`Attempt ${attempt} error for ${file}: ${err && err.message ? err.message : String(err)}`);
+                  if (attempt < maxAttempts) {
+                    const wait = Math.pow(2, attempt) * backoffBaseMs;
+                    console.log(`Retrying in ${wait}ms...`);
+                    await new Promise(r => setTimeout(r, wait));
+                  } else {
+                    throw new Error(`Upload failed after ${maxAttempts} attempts for ${file}: ${err && err.message ? err.message : String(err)}`);
+                  }
+                } finally {
+                  try { stream.destroy(); } catch (e) { /* ignore */ }
+                }
+              } // end attempts loop
+            } // end files loop
+
+            console.log('All uploads processed.');
