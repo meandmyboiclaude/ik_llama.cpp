@@ -28,12 +28,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: macOS-latest-cmake-arm64
           evict-old-files: 1d
@@ -73,7 +73,7 @@ jobs:
           zip -r llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip ./build/bin/*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-macos-arm64.zip
@@ -89,12 +89,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: macOS-latest-cmake-x64-${{ matrix.instr }}
           evict-old-files: 1d
@@ -143,7 +143,7 @@ jobs:
           zip -r llama-${{ steps.tag.outputs.name }}-bin-macos-x64-${{ matrix.instr }}.zip ./build/bin/*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-macos-x64-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-macos-x64-${{ matrix.instr }}.zip
@@ -164,12 +164,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: ubuntu-cpu-cmake
           evict-old-files: 1d
@@ -245,7 +245,7 @@ jobs:
           zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}-${{ matrix.instr }}.zip ./build/bin/*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-${{ matrix.build }}-${{ matrix.instr }}.zip
@@ -266,12 +266,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: ubuntu-22-cmake-vulkan
           evict-old-files: 1d
@@ -352,7 +352,7 @@ jobs:
           zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }}-${{ matrix.instr }}.zip ./build/bin/*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }}-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-vulkan-${{ matrix.build }}-${{ matrix.instr }}.zip
@@ -374,12 +374,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: ubuntu-22-cmake-cuda-${{ matrix.cuda }}
           evict-old-files: 1d
@@ -461,7 +461,7 @@ jobs:
           find build -type f -name "*.so" -exec mv {} ./build/bin/ \;
           zip -r llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-${{ matrix.build }}-${{ matrix.instr }}.zip ./build/bin/*
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-${{ matrix.build }}-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-${{ matrix.build }}-${{ matrix.instr }}.zip
@@ -477,7 +477,7 @@ jobs:
           rm ./build/bin/libcudart.so.*
 
       - name: Upload Cuda runtime
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: cudart-llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-${{ matrix.build }}-${{ matrix.instr }}.zip
           name: cudart-llama-${{ steps.tag.outputs.name }}-bin-ubuntu-cuda-${{ matrix.cuda }}-${{ matrix.build }}-${{ matrix.instr }}.zip
@@ -493,12 +493,12 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-cpu-${{ matrix.arch }}-${{ matrix.instr }}
           variant: ccache
@@ -603,7 +603,7 @@ jobs:
           7z a llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip .\build\bin\Release\*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.arch }}-${{ matrix.instr }}.zip
@@ -764,12 +764,12 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-cpu-${{ env.BUILD_LABEL }}-${{ env.INSTR }}
           variant: ccache
@@ -922,7 +922,7 @@ jobs:
           7z a "llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.label }}-${{ matrix.instr }}.zip" .\build\bin\Release\*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.label }}-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-cpu-${{ matrix.label }}-${{ matrix.instr }}.zip
@@ -950,10 +950,10 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-${{ matrix.backend }}-${{ matrix.arch }}
           variant: ccache
@@ -1049,7 +1049,7 @@ jobs:
           7z a llama-${{ steps.tag.outputs.name }}-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip .\build\bin\Release\*${{ matrix.target }}.dll
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-${{ matrix.backend }}-${{ matrix.arch }}.zip
@@ -1067,10 +1067,10 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-cuda-${{ matrix.cuda }}-${{ matrix.instr }}
           variant: ccache
@@ -1185,7 +1185,7 @@ jobs:
           7z a llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip .\build\bin\Release\*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
@@ -1200,7 +1200,7 @@ jobs:
           7z a cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip $dst\*
 
       - name: Upload Cuda runtime
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
           name: cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.instr }}.zip
@@ -1401,12 +1401,12 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-cuda-${{ matrix.cuda }}-${{ env.BUILD_LABEL }}-${{ env.INSTR }}
           variant: ccache
@@ -1573,7 +1573,7 @@ jobs:
           7z a "llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.label }}-${{ matrix.instr }}.zip" .\build\bin\Release\*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.label }}-${{ matrix.instr }}.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.label }}-${{ matrix.instr }}.zip
@@ -1588,7 +1588,7 @@ jobs:
           7z a cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.label }}-${{ matrix.instr }}.zip $dst\*
 
       - name: Upload Cuda runtime
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.label }}-${{ matrix.instr }}.zip
           name: cudart-llama-${{ steps.tag.outputs.name }}-bin-win-cuda-${{ matrix.cuda }}-x64-${{ matrix.label }}-${{ matrix.instr }}.zip
@@ -1609,10 +1609,10 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-sycl
           variant: ccache
@@ -1666,7 +1666,7 @@ jobs:
           7z a llama-${{ steps.tag.outputs.name }}-bin-win-sycl-x64.zip ./build/bin/*
 
       - name: Upload the release package
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-sycl-x64.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-sycl-x64.zip
@@ -1684,7 +1684,7 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Clone rocWMMA repository
         id: clone_rocwmma
@@ -1692,7 +1692,7 @@ jobs:
           git clone https://github.com/rocm/rocwmma --branch rocm-6.2.4 --depth 1
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-hip-${{ matrix.name }}-x64
           evict-old-files: 1d
@@ -1740,7 +1740,7 @@ jobs:
           7z a llama-${{ steps.tag.outputs.name }}-bin-win-hip-${{ matrix.name }}-x64.zip .\build\bin\*
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-bin-win-hip-${{ matrix.name }}-x64.zip
           name: llama-${{ steps.tag.outputs.name }}-bin-win-hip-${{ matrix.name }}-x64.zip
@@ -1751,7 +1751,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -1791,7 +1791,7 @@ jobs:
           zip --symlinks -r llama-${{ steps.tag.outputs.name }}-xcframework.zip build-apple/llama.xcframework
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           path: llama-${{ steps.tag.outputs.name }}-xcframework.zip
           name: llama-${{ steps.tag.outputs.name }}-xcframework
@@ -1824,7 +1824,7 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -1834,7 +1834,7 @@ jobs:
 
       - name: Download artifacts
         id: download-artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./artifact
           merge-multiple: true
@@ -2067,22 +2067,205 @@ jobs:
 
       - name: Upload release
         id: upload_release
-        uses: actions/github-script@v3
+        uses: actions/github-script@v8
         with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const path = require('path');
             const fs = require('fs');
+            const path = require('path');
+            const crypto = require('crypto');
+
             const release_id = '${{ steps.create_release.outputs.id }}';
-            for (let file of await fs.readdirSync('./release')) {
-              if (path.extname(file) === '.zip') {
-                console.log('uploadReleaseAsset', file);
-                await github.repos.uploadReleaseAsset({
-                  owner: context.repo.owner,
-                  repo: context.repo.repo,
-                  release_id: release_id,
-                  name: file,
-                  data: await fs.readFileSync(`./release/${file}`)
-                });
-              }
+            const dir = './release';
+            const maxAttempts = 4;
+            const backoffBaseMs = 500;
+
+            if (!fs.existsSync(dir)) {
+              console.log(`Directory ${dir} does not exist - nothing to upload.`);
+              return;
             }
+
+            const files = fs.readdirSync(dir).filter(f => path.extname(f).toLowerCase() === '.zip');
+            if (files.length === 0) {
+              console.log('No .zip files found to upload.');
+              return;
+            }
+
+            function normalizeRemoteDigest(raw) {
+              if (!raw) return null;
+              return raw.replace(/^sha256:/i, '').toLowerCase();
+            }
+
+            function computeLocalSha256(filePath) {
+              return new Promise((resolve, reject) => {
+                const h = crypto.createHash('sha256');
+                const s = fs.createReadStream(filePath);
+                s.on('error', reject);
+                s.on('data', chunk => h.update(chunk));
+                s.on('end', () => resolve(h.digest('hex')));
+              });
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // helper: find existing asset by name (returns null if not found)
+            async function findExistingAssetByName(name) {
+              const resp = await github.rest.repos.listReleaseAssets({
+                owner,
+                repo,
+                release_id,
+                per_page: 100
+              });
+              const assets = resp.data || [];
+              return assets.find(a => a.name === name) || null;
+            }
+
+            for (const file of files) {
+              const filePath = path.join(dir, file);
+              const stat = fs.statSync(filePath);
+              const expectedSize = stat.size;
+
+              console.log(`\n=== Processing ${file} (${expectedSize} bytes) ===`);
+
+              // compute local sha (needed to validate remote digest if present)
+              const localSha = await computeLocalSha256(filePath);
+              console.log(`Local SHA256: ${localSha}`);
+
+              // check if asset already exists on the release
+              const existing = await findExistingAssetByName(file);
+              if (existing) {
+                const existingId = existing.id;
+                const remoteDigestRaw = existing.digest ?? null;
+                const remoteDigest = normalizeRemoteDigest(remoteDigestRaw);
+                const remoteSize = Number(existing.size);
+
+                console.log(`Found existing asset id=${existingId} size=${remoteSize} digest=${remoteDigestRaw ?? '<none>'}`);
+
+                if (remoteDigest) {
+                  if (remoteDigest === localSha.toLowerCase()) {
+                    console.log(`✅ Remote digest matches local for ${file} — skipping upload.`);
+                    continue; // already correct, skip to next file
+                  } else {
+                    console.warn(`❌ Remote digest present but does not match local (will delete and re-upload).`);
+                    // delete the bad asset so we can upload fresh below
+                    try {
+                      await github.rest.repos.deleteReleaseAsset({
+                        owner,
+                        repo,
+                        asset_id: existingId
+                      });
+                      console.log(`Deleted existing asset id=${existingId}`);
+                    } catch (delErr) {
+                      console.warn(`Failed to delete existing asset id=${existingId}: ${delErr && delErr.message ? delErr.message : delErr}`);
+                      // fall through to attempt upload anyway; if delete failed, upload may conflict
+                    }
+                  }
+                } else {
+                  // no digest present on remote — fall back to size check
+                  if (remoteSize === expectedSize) {
+                    console.log(`⚠️ Remote has no digest but sizes match for ${file} — skipping upload (fallback).`);
+                    continue;
+                  } else {
+                    console.warn(`❌ Remote has no digest and size mismatch (will delete and re-upload).`);
+                    try {
+                      await github.rest.repos.deleteReleaseAsset({
+                        owner,
+                        repo,
+                        asset_id: existingId
+                      });
+                      console.log(`Deleted existing asset id=${existingId}`);
+                    } catch (delErr) {
+                      console.warn(`Failed to delete existing asset id=${existingId}: ${delErr && delErr.message ? delErr.message : delErr}`);
+                    }
+                  }
+                }
+              } // end existing asset handling
+
+              // Upload loop (with retries) — only executed if we need to upload
+              let attempt = 0;
+              let success = false;
+              while (attempt < maxAttempts && !success) {
+                attempt++;
+                console.log(`Upload attempt ${attempt} for ${file}...`);
+                const stream = fs.createReadStream(filePath);
+                try {
+                  const resp = await github.rest.repos.uploadReleaseAsset({
+                    owner,
+                    repo,
+                    release_id,
+                    name: file,
+                    data: stream,
+                    headers: {
+                      'content-type': 'application/zip',
+                      'content-length': expectedSize
+                    }
+                  });
+
+                  const uploadedSize = Number(resp.data.size);
+                  const assetId = resp.data.id;
+                  const remoteDigestRaw = resp.data.digest ?? null;
+                  const remoteDigest = normalizeRemoteDigest(remoteDigestRaw);
+
+                  console.log(`Uploaded asset id=${assetId} size=${uploadedSize} digest=${remoteDigestRaw ?? '<none>'}`);
+
+                  // validate
+                  if (remoteDigest) {
+                    if (remoteDigest === localSha.toLowerCase()) {
+                      console.log(`✅ Digest match after upload for ${file}`);
+                      success = true;
+                    } else {
+                      console.warn(`❌ Digest mismatch after upload for ${file}: local=${localSha} remote=${remoteDigestRaw}`);
+                    }
+                  } else {
+                    if (uploadedSize === expectedSize) {
+                      console.log(`⚠️ Digest unavailable, but size matches after upload for ${file} — accepting (fallback).`);
+                      success = true;
+                    } else {
+                      console.warn(`❌ Size mismatch after upload for ${file}: expected=${expectedSize} uploaded=${uploadedSize}`);
+                    }
+                  }
+
+                  // if verification failed, delete the uploaded asset so retries don't accumulate bad assets
+                  if (!success) {
+                    try {
+                      console.log(`Deleting asset id=${assetId} (verification failed) ...`);
+                      await github.rest.repos.deleteReleaseAsset({
+                        owner,
+                        repo,
+                        asset_id: assetId
+                      });
+                      console.log(`Deleted asset id=${assetId}`);
+                    } catch (delErr) {
+                      console.warn(`Failed deleting bad uploaded asset id=${assetId}: ${delErr && delErr.message ? delErr.message : delErr}`);
+                    }
+
+                    if (attempt < maxAttempts) {
+                      const wait = Math.pow(2, attempt) * backoffBaseMs;
+                      console.log(`Will retry in ${wait}ms...`);
+                      await new Promise(r => setTimeout(r, wait));
+                    } else {
+                      throw new Error(`Failed verification after ${maxAttempts} attempts for ${file}`);
+                    }
+                  }
+
+                } catch (err) {
+                  console.warn(`Attempt ${attempt} error for ${file}: ${err && err.message ? err.message : String(err)}`);
+                  if (attempt < maxAttempts) {
+                    const wait = Math.pow(2, attempt) * backoffBaseMs;
+                    console.log(`Retrying in ${wait}ms...`);
+                    await new Promise(r => setTimeout(r, wait));
+                  } else {
+                    throw new Error(`Upload failed after ${maxAttempts} attempts for ${file}: ${err && err.message ? err.message : String(err)}`);
+                  }
+                } finally {
+                  try { stream.destroy(); } catch (e) { /* ignore */ }
+                }
+              } // end upload attempts
+
+              if (!success) {
+                throw new Error(`Giving up on ${file} after ${maxAttempts} attempts.`);
+              }
+            } // end files loop
+
+            console.log('All uploads processed.');
