@@ -339,6 +339,7 @@ jobs:
         uses: ./.github/actions/get-tag-name
 
       - name: Pack artifacts
+        id: pack_artifacts
         shell: pwsh
         run: |
           # quick note: "VC143" is the Visual C++ toolset folder name (msvc v14.3x, VS 2022).
