@@ -1200,6 +1200,11 @@ jobs:
               return;
             }
 
+            function normalizeRemoteDigest(raw) {
+              if (!raw) return null;
+              return raw.replace(/^sha256:/i, '').toLowerCase();
+            }
+
             function computeLocalSha256(filePath) {
               return new Promise((resolve, reject) => {
                 const h = crypto.createHash('sha256');
@@ -1210,35 +1215,91 @@ jobs:
               });
             }
 
-            // Normalize remote digest: strip leading "sha256:" (any case) and lower-case
-            function normalizeRemoteDigest(raw) {
-              if (!raw) return null;
-              return raw.replace(/^sha256:/i, '').toLowerCase();
-            }
-
             const owner = context.repo.owner;
             const repo = context.repo.repo;
+
+            // helper: find existing asset by name (returns null if not found)
+            async function findExistingAssetByName(name) {
+              const resp = await github.rest.repos.listReleaseAssets({
+                owner,
+                repo,
+                release_id,
+                per_page: 100
+              });
+              const assets = resp.data || [];
+              return assets.find(a => a.name === name) || null;
+            }
 
             for (const file of files) {
               const filePath = path.join(dir, file);
               const stat = fs.statSync(filePath);
               const expectedSize = stat.size;
-              const localSha = await computeLocalSha256(filePath);
+
               console.log(`\n=== Processing ${file} (${expectedSize} bytes) ===`);
+
+              // compute local sha (needed to validate remote digest if present)
+              const localSha = await computeLocalSha256(filePath);
               console.log(`Local SHA256: ${localSha}`);
 
+              // check if asset already exists on the release
+              const existing = await findExistingAssetByName(file);
+              if (existing) {
+                const existingId = existing.id;
+                const remoteDigestRaw = existing.digest ?? null;
+                const remoteDigest = normalizeRemoteDigest(remoteDigestRaw);
+                const remoteSize = Number(existing.size);
+
+                console.log(`Found existing asset id=${existingId} size=${remoteSize} digest=${remoteDigestRaw ?? '<none>'}`);
+
+                if (remoteDigest) {
+                  if (remoteDigest === localSha.toLowerCase()) {
+                    console.log(`✅ Remote digest matches local for ${file} — skipping upload.`);
+                    continue; // already correct, skip to next file
+                  } else {
+                    console.warn(`❌ Remote digest present but does not match local (will delete and re-upload).`);
+                    // delete the bad asset so we can upload fresh below
+                    try {
+                      await github.rest.repos.deleteReleaseAsset({
+                        owner,
+                        repo,
+                        asset_id: existingId
+                      });
+                      console.log(`Deleted existing asset id=${existingId}`);
+                    } catch (delErr) {
+                      console.warn(`Failed to delete existing asset id=${existingId}: ${delErr && delErr.message ? delErr.message : delErr}`);
+                      // fall through to attempt upload anyway; if delete failed, upload may conflict
+                    }
+                  }
+                } else {
+                  // no digest present on remote — fall back to size check
+                  if (remoteSize === expectedSize) {
+                    console.log(`⚠️ Remote has no digest but sizes match for ${file} — skipping upload (fallback).`);
+                    continue;
+                  } else {
+                    console.warn(`❌ Remote has no digest and size mismatch (will delete and re-upload).`);
+                    try {
+                      await github.rest.repos.deleteReleaseAsset({
+                        owner,
+                        repo,
+                        asset_id: existingId
+                      });
+                      console.log(`Deleted existing asset id=${existingId}`);
+                    } catch (delErr) {
+                      console.warn(`Failed to delete existing asset id=${existingId}: ${delErr && delErr.message ? delErr.message : delErr}`);
+                    }
+                  }
+                }
+              } // end existing asset handling
+
+              // Upload loop (with retries) — only executed if we need to upload
               let attempt = 0;
               let success = false;
-
               while (attempt < maxAttempts && !success) {
                 attempt++;
                 console.log(`Upload attempt ${attempt} for ${file}...`);
-
-                // fresh stream per attempt
                 const stream = fs.createReadStream(filePath);
-
                 try {
-                  const resp = await github.repos.uploadReleaseAsset({
+                  const resp = await github.rest.repos.uploadReleaseAsset({
                     owner,
                     repo,
                     release_id,
@@ -1252,49 +1313,51 @@ jobs:
 
                   const uploadedSize = Number(resp.data.size);
                   const assetId = resp.data.id;
-                  const rawDigest = resp.data.digest ?? null;
-                  const remoteDigest = normalizeRemoteDigest(rawDigest);
-                  console.log(`Upload response: id=${assetId} size=${uploadedSize} digest=${rawDigest ?? '<none>'}`);
+                  const remoteDigestRaw = resp.data.digest ?? null;
+                  const remoteDigest = normalizeRemoteDigest(remoteDigestRaw);
 
-                  // If remote digest exists, compare that to local SHA (after normalization)
+                  console.log(`Uploaded asset id=${assetId} size=${uploadedSize} digest=${remoteDigestRaw ?? '<none>'}`);
+
+                  // validate
                   if (remoteDigest) {
                     if (remoteDigest === localSha.toLowerCase()) {
-                      console.log(`${file} uploaded and digest matches.`);
+                      console.log(`✅ Digest match after upload for ${file}`);
                       success = true;
                     } else {
-                      console.warn(`Digest mismatch for ${file}: local=${localSha} remote=${rawDigest}`);
+                      console.warn(`❌ Digest mismatch after upload for ${file}: local=${localSha} remote=${remoteDigestRaw}`);
                     }
                   } else {
-                    // Fallback: compare sizes if digest not available
                     if (uploadedSize === expectedSize) {
-                      console.log(`${file} uploaded and size matches (digest not available).`);
+                      console.log(`⚠️ Digest unavailable, but size matches after upload for ${file} — accepting (fallback).`);
                       success = true;
                     } else {
-                      console.warn(`Size mismatch for ${file}: expected=${expectedSize} uploaded=${uploadedSize}`);
+                      console.warn(`❌ Size mismatch after upload for ${file}: expected=${expectedSize} uploaded=${uploadedSize}`);
                     }
                   }
 
+                  // if verification failed, delete the uploaded asset so retries don't accumulate bad assets
                   if (!success) {
-                    // delete the bad asset so retries don't accumulate duplicates
                     try {
                       console.log(`Deleting asset id=${assetId} (verification failed) ...`);
-                      await github.repos.deleteReleaseAsset({
+                      await github.rest.repos.deleteReleaseAsset({
                         owner,
                         repo,
                         asset_id: assetId
                       });
+                      console.log(`Deleted asset id=${assetId}`);
                     } catch (delErr) {
-                      console.warn(`Failed to delete asset id=${assetId}: ${delErr && delErr.message ? delErr.message : delErr}`);
+                      console.warn(`Failed deleting bad uploaded asset id=${assetId}: ${delErr && delErr.message ? delErr.message : delErr}`);
                     }
 
                     if (attempt < maxAttempts) {
                       const wait = Math.pow(2, attempt) * backoffBaseMs;
-                      console.log(`Will retry upload in ${wait}ms...`);
+                      console.log(`Will retry in ${wait}ms...`);
                       await new Promise(r => setTimeout(r, wait));
                     } else {
                       throw new Error(`Failed verification after ${maxAttempts} attempts for ${file}`);
                     }
                   }
+
                 } catch (err) {
                   console.warn(`Attempt ${attempt} error for ${file}: ${err && err.message ? err.message : String(err)}`);
                   if (attempt < maxAttempts) {
@@ -1307,11 +1370,11 @@ jobs:
                 } finally {
                   try { stream.destroy(); } catch (e) { /* ignore */ }
                 }
-              } // attempts loop
+              } // end upload attempts
 
               if (!success) {
                 throw new Error(`Giving up on ${file} after ${maxAttempts} attempts.`);
               }
-            } // files loop
+            } // end files loop
 
             console.log('All uploads processed.');
