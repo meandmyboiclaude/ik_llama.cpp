@@ -28,12 +28,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: macOS-latest-cmake-arm64
           evict-old-files: 1d
@@ -82,12 +82,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: macOS-latest-cmake-x64
           evict-old-files: 1d
@@ -146,12 +146,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: ubuntu-cpu-cmake
           evict-old-files: 1d
@@ -227,12 +227,12 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: ubuntu-22-cmake-vulkan
           evict-old-files: 1d
@@ -280,12 +280,12 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-cpu-${{ matrix.arch }}
           variant: ccache
@@ -518,12 +518,12 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-cpu-${{ env.BUILD_LABEL }}
           variant: ccache
@@ -699,10 +699,10 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-${{ matrix.backend }}-${{ matrix.arch }}
           variant: ccache
@@ -775,10 +775,10 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-cuda-${{ matrix.cuda }}-${{ matrix.instr }}
           variant: ccache
@@ -863,10 +863,10 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-sycl
           variant: ccache
@@ -938,7 +938,7 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Clone rocWMMA repository
         id: clone_rocwmma
@@ -946,7 +946,7 @@ jobs:
           git clone https://github.com/rocm/rocwmma --branch rocm-6.2.4 --depth 1
 
       - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2.16
+        uses: ggml-org/ccache-action@v1.2.21
         with:
           key: windows-latest-cmake-hip-${{ matrix.name }}-x64
           evict-old-files: 1d
@@ -1005,7 +1005,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -1076,7 +1076,7 @@ jobs:
     steps:
       - name: Clone
         id: checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -1086,7 +1086,7 @@ jobs:
 
       - name: Download artifacts
         id: download-artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: ./artifact
           merge-multiple: true
@@ -1176,7 +1176,7 @@ jobs:
 
       - name: Upload release
         id: upload_release
-        uses: actions/github-script@v3
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -1194,14 +1194,14 @@ jobs:
               return;
             }
 
-            const files = fs.readdirSync(dir).filter(f => path.extname(f) === '.zip');
+            const files = fs.readdirSync(dir).filter(f => path.extname(f).toLowerCase() === '.zip');
             if (files.length === 0) {
               console.log('No .zip files found to upload.');
               return;
             }
 
-            async function sha256OfFile(filePath) {
-              return await new Promise((resolve, reject) => {
+            function computeLocalSha256(filePath) {
+              return new Promise((resolve, reject) => {
                 const h = crypto.createHash('sha256');
                 const s = fs.createReadStream(filePath);
                 s.on('error', reject);
@@ -1210,11 +1210,20 @@ jobs:
               });
             }
 
+            // Normalize remote digest: strip leading "sha256:" (any case) and lower-case
+            function normalizeRemoteDigest(raw) {
+              if (!raw) return null;
+              return raw.replace(/^sha256:/i, '').toLowerCase();
+            }
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
             for (const file of files) {
               const filePath = path.join(dir, file);
               const stat = fs.statSync(filePath);
               const expectedSize = stat.size;
-              const localSha = await sha256OfFile(filePath);
+              const localSha = await computeLocalSha256(filePath);
               console.log(`\n=== Processing ${file} (${expectedSize} bytes) ===`);
               console.log(`Local SHA256: ${localSha}`);
 
@@ -1225,13 +1234,14 @@ jobs:
                 attempt++;
                 console.log(`Upload attempt ${attempt} for ${file}...`);
 
+                // fresh stream per attempt
                 const stream = fs.createReadStream(filePath);
 
                 try {
                   const resp = await github.repos.uploadReleaseAsset({
-                    owner: context.repo.owner,
-                    repo: context.repo.repo,
-                    release_id: release_id,
+                    owner,
+                    repo,
+                    release_id,
                     name: file,
                     data: stream,
                     headers: {
@@ -1240,21 +1250,22 @@ jobs:
                     }
                   });
 
-                  // resp.data may include .digest (sha256) starting with GitHub's digest rollout.
                   const uploadedSize = Number(resp.data.size);
-                  const assetDigest = resp.data.digest; // may be undefined on older servers/assets
-                  console.log(`Upload response: id=${resp.data.id} size=${uploadedSize} digest=${assetDigest ?? '<none>'}`);
+                  const assetId = resp.data.id;
+                  const rawDigest = resp.data.digest ?? null;
+                  const remoteDigest = normalizeRemoteDigest(rawDigest);
+                  console.log(`Upload response: id=${assetId} size=${uploadedSize} digest=${rawDigest ?? '<none>'}`);
 
-                  if (assetDigest) {
-                    // GitHub returns digest as hex SHA256 — compare to local SHA
-                    if (assetDigest.toLowerCase() === localSha.toLowerCase()) {
+                  // If remote digest exists, compare that to local SHA (after normalization)
+                  if (remoteDigest) {
+                    if (remoteDigest === localSha.toLowerCase()) {
                       console.log(`${file} uploaded and digest matches.`);
                       success = true;
                     } else {
-                      console.warn(`Digest mismatch for ${file}: local=${localSha} remote=${assetDigest}`);
+                      console.warn(`Digest mismatch for ${file}: local=${localSha} remote=${rawDigest}`);
                     }
                   } else {
-                    // Fallback: check size only (what you requested) if digest isn't available
+                    // Fallback: compare sizes if digest not available
                     if (uploadedSize === expectedSize) {
                       console.log(`${file} uploaded and size matches (digest not available).`);
                       success = true;
@@ -1264,9 +1275,21 @@ jobs:
                   }
 
                   if (!success) {
+                    // delete the bad asset so retries don't accumulate duplicates
+                    try {
+                      console.log(`Deleting asset id=${assetId} (verification failed) ...`);
+                      await github.repos.deleteReleaseAsset({
+                        owner,
+                        repo,
+                        asset_id: assetId
+                      });
+                    } catch (delErr) {
+                      console.warn(`Failed to delete asset id=${assetId}: ${delErr && delErr.message ? delErr.message : delErr}`);
+                    }
+
                     if (attempt < maxAttempts) {
                       const wait = Math.pow(2, attempt) * backoffBaseMs;
-                      console.log(`Will retry in ${wait}ms...`);
+                      console.log(`Will retry upload in ${wait}ms...`);
                       await new Promise(r => setTimeout(r, wait));
                     } else {
                       throw new Error(`Failed verification after ${maxAttempts} attempts for ${file}`);
@@ -1284,7 +1307,11 @@ jobs:
                 } finally {
                   try { stream.destroy(); } catch (e) { /* ignore */ }
                 }
-              } // end attempts loop
-            } // end files loop
+              } // attempts loop
+
+              if (!success) {
+                throw new Error(`Giving up on ${file} after ${maxAttempts} attempts.`);
+              }
+            } // files loop
 
             console.log('All uploads processed.');
