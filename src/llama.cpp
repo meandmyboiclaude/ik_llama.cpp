@@ -1995,6 +1995,54 @@ static bool is_model_split_supported(const llama_model & model) {
     return it != k_supported.end();
 }
 
+static std::vector<double> get_layer_sizes(const llama_model_loader & ml, const llama_model & model) {
+    int n_layer = model.hparams.n_layer;
+    std::vector<double> result(n_layer+1, 0);
+    size_t ow_size = 0;
+    size_t embd_size = 0;
+    for (int i = 0; i < ml.n_tensors; ++i) {
+        auto t = ml.get_weight(i)->tensor;
+        std::string name(t->name);
+        auto size = ggml_nbytes(t);
+        if (name == "token_embd.weight") {
+            embd_size = size;
+            continue;
+        }
+        if (name == "output.weight") {
+            ow_size = size;
+            continue;
+        }
+        auto pos = name.find("blk.");
+        if (pos != 0) {
+            printf("Oops: tensor with strange name %s\n", name.c_str());
+            continue;
+        }
+        pos += 4;
+        auto pos1 = name.find('.', pos);
+        if (pos1 == std::string::npos) {
+            printf("Oops: tensor with strange name %s\n", name.c_str());
+            continue;
+        }
+        auto layer_string = name.substr(pos, pos1-pos);
+        std::istringstream str(layer_string);
+        int il; str >> il;
+        if (str.fail()) {
+            printf("Oops: failed to read layer index from %s for tensor %s\n", layer_string.c_str(), name.c_str());
+        }
+        if (il < 0 || il >= model.hparams.n_layer) {
+            printf("Oops: strange layer index %d for tensor %s\n", il, name.c_str());
+            continue;
+        }
+        result[il] += size;
+    }
+    if (!ow_size) ow_size = embd_size;
+    result[n_layer] = ow_size;
+    LLAMA_LOG_INFO("------------------- Layer sizes:\n");
+    for (int il = 0; il < n_layer; ++il) LLAMA_LOG_INFO("Layer %2d: %g MiB\n", il, result[il]/1024./1024.);
+    LLAMA_LOG_INFO("Layer %2d: %g MiB (output layer)\n", n_layer, result[n_layer]/1024./1024.);
+    return result;
+}
+
 // Returns false if cancelled by progress_callback
 static bool llm_load_tensors(
         llama_model_loader & ml,
@@ -2008,6 +2056,7 @@ static bool llm_load_tensors(
         bool use_mlock,
         bool validate_quants,
         bool mtp,
+        bool dry_run,
         llama_progress_callback progress_callback,
         void * progress_callback_user_data) {
     model.t_start_us = ggml_time_us();
@@ -2082,14 +2131,40 @@ static bool llm_load_tensors(
     model.default_layer_device = std::vector<int32_t>(hparams.n_layer+1, device_count-1);
     int act_gpu_layers = std::min(n_gpu_layers, (int)n_layer + 1);
     if (device_count > 1) {
-        for (int i = i_gpu_start; i < n_layer; ++i) {
-            int layer_gpu = std::upper_bound(model.splits.begin(), model.splits.begin() + device_count, float(i - i_gpu_start)/act_gpu_layers) - model.splits.begin();
-            model.default_layer_device[i] = model.devices[layer_gpu];
+        auto layer_sizes = get_layer_sizes(ml, model);
+        int n_last = n_layer;
+        if (n_gpu_layers > n_layer) ++n_last;
+        double sum = 0;
+        for (int i = i_gpu_start; i < n_last; ++i) sum += layer_sizes[i];
+        int last = i_gpu_start;
+        float loaded_sum = 0;
+        for (int id = 0; id < int(model.splits.size()); ++id) {
+            float split_size = model.splits[id]*sum;
+            int il = last;
+            for (; il < n_last; ++il) {
+                if (loaded_sum + layer_sizes[il] <= split_size) {
+                    model.default_layer_device[il] = id;
+                    loaded_sum += layer_sizes[il];
+                    LLAMA_LOG_INFO("Setting default device in layer %2d to %d\n", il, id);
+                } else {
+                    if (loaded_sum + layer_sizes[il] - split_size < split_size - loaded_sum) {
+                        LLAMA_LOG_INFO("Setting default device in layer %2d to %d\n", il, id);
+                        model.default_layer_device[il] = id;
+                        loaded_sum += layer_sizes[il++];
+                    }
+                    break;
+                }
+            }
+            last = il;
         }
-        if (n_gpu_layers > n_layer) {
-            int layer_gpu = std::upper_bound(model.splits.begin(), model.splits.begin() + device_count, float(act_gpu_layers - 1)/act_gpu_layers) - model.splits.begin();
-            model.default_layer_device[n_layer] = model.devices[layer_gpu];
-        }
+        //for (int i = i_gpu_start; i < n_layer; ++i) {
+        //    int layer_gpu = std::upper_bound(model.splits.begin(), model.splits.begin() + device_count, float(i - i_gpu_start)/act_gpu_layers) - model.splits.begin();
+        //    model.default_layer_device[i] = model.devices[layer_gpu];
+        //}
+        //if (n_gpu_layers > n_layer) {
+        //    int layer_gpu = std::upper_bound(model.splits.begin(), model.splits.begin() + device_count, float(act_gpu_layers - 1)/act_gpu_layers) - model.splits.begin();
+        //    model.default_layer_device[n_layer] = model.devices[layer_gpu];
+        //}
     }
     // assign the repeating layers to the devices according to the splits
     if (split_mode == LLAMA_SPLIT_MODE_LAYER) {
@@ -2286,11 +2361,13 @@ static bool llm_load_tensors(
     }
 
     // load tensor data
-    for (auto & it : ctx_bufs) {
-        ggml_context * ctx = it.first;
-        auto & bufs = it.second;
-        if (!ml.load_all_data(ctx, bufs, use_mlock ? &model.mlock_mmaps : NULL, progress_callback, progress_callback_user_data)) {
-            return false;
+    if (!dry_run) {
+        for (auto & it : ctx_bufs) {
+            ggml_context * ctx = it.first;
+            auto & bufs = it.second;
+            if (!ml.load_all_data(ctx, bufs, use_mlock ? &model.mlock_mmaps : NULL, progress_callback, progress_callback_user_data)) {
+                return false;
+            }
         }
     }
 
@@ -2375,7 +2452,7 @@ static bool llm_load_tensors(
 // Returns 0 on success, -1 on error, and -2 on cancellation via llama_progress_callback
 static int llama_model_load(const std::string & fname, llama_model & model, llama_model_params & params) {
     try {
-        llama_model_loader ml(fname, params.use_mmap, params.check_tensors,
+        llama_model_loader ml(fname, params.ncmoe, params.use_mmap, params.check_tensors,
                 params.repack_tensors, params.use_thp, params.merge_qkv, params.merge_up_gate_exps,
                 params.kv_overrides, params.tensor_buft_overrides, nullptr);
 
@@ -2429,7 +2506,7 @@ static int llama_model_load(const std::string & fname, llama_model & model, llam
 
         if (!llm_load_tensors(
             ml, model, params.n_gpu_layers, params.mla, params.split_mode,  params.main_gpu, params.max_gpu, params.tensor_split,
-            params.use_mlock, params.validate_quants, params.mtp,
+            params.use_mlock, params.validate_quants, params.mtp, params.dry_run,
             params.progress_callback, params.progress_callback_user_data
         )) {
             return -2;
@@ -4391,6 +4468,7 @@ struct llama_model_params llama_model_default_params() {
         /*.split_mode                  =*/ LLAMA_SPLIT_MODE_LAYER,
         /*.main_gpu                    =*/ 0,
         /*.max_gpu                     =*/ 0,
+        /*.ncmoe                       =*/ 0,
         /*.tensor_split                =*/ nullptr,
         /*.rpc_servers                 =*/ nullptr,
         /*.progress_callback           =*/ nullptr,
@@ -4407,6 +4485,7 @@ struct llama_model_params llama_model_default_params() {
         /*.merge_qkv                   =*/ false,
         /*.merge_up_gate_exps          =*/ false,
         /*.mtp                         =*/ false,
+        /*.dry_run                     =*/ false,
     };
 
 #ifdef GGML_USE_METAL
